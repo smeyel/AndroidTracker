@@ -53,18 +53,23 @@ containing a value of this type.
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int action_settings=0x7f040007;
+        public static final int action_settings=0x7f04000b;
         public static final int any=0x7f040000;
         public static final int back=0x7f040001;
+        public static final int choose_button=0x7f04000a;
+        public static final int createcsv_button=0x7f040009;
         public static final int front=0x7f040002;
-        public static final int objectname_edittext=0x7f040005;
-        public static final int objectname_textview=0x7f040004;
-        public static final int opencv_start_surface_view=0x7f040003;
-        public static final int start_button=0x7f040006;
+        public static final int layoutid=0x7f040003;
+        public static final int nameofobject=0x7f040006;
+        public static final int objectname_edittext=0x7f040007;
+        public static final int objectname_textview=0x7f040005;
+        public static final int opencv_start_surface_view=0x7f040004;
+        public static final int start_button=0x7f040008;
     }
     public static final class layout {
-        public static final int activity_picturemaker=0x7f030000;
-        public static final int activity_start=0x7f030001;
+        public static final int activity_photographedobjects=0x7f030000;
+        public static final int activity_picturemaker=0x7f030001;
+        public static final int activity_start=0x7f030002;
     }
     public static final class menu {
         public static final int main=0x7f090000;
@@ -72,7 +77,10 @@ containing a value of this type.
     public static final class string {
         public static final int action_settings=0x7f070001;
         public static final int app_name=0x7f070000;
+        public static final int choose_label=0x7f070007;
+        public static final int createcsv_label=0x7f070005;
         public static final int main_title=0x7f070002;
+        public static final int nameofobject_label=0x7f070006;
         public static final int start_label=0x7f070003;
         public static final int text_label=0x7f070004;
     }

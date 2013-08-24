@@ -6,18 +6,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Vector;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
-import com.mycompany.previewphototaker.R;
-
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
 
@@ -97,7 +91,7 @@ public class SaveImageToSD {
 			Collections.sort(allFileNamesInt);
 			
 			fileCounter = 1;
-			for(int fileNameInt : allFileNamesInt) {
+			for(@SuppressWarnings("unused") int fileNameInt : allFileNamesInt) {
 				if(allFileNamesInt.get(fileCounter-1) > (fileCounter))
 				{
 					fileName = Integer.toString(fileCounter);
