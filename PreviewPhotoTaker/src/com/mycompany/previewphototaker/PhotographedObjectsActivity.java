@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 public class PhotographedObjectsActivity extends Activity {
 
@@ -32,12 +33,15 @@ public class PhotographedObjectsActivity extends Activity {
 		File foldersandfilesDir = new File(dir);
         String[] names = foldersandfilesDir.list();
         int folderCounter=0;
-        for(String name : names)
+        if(foldersandfilesDir.isDirectory())
         {
-        	if(new File(dir + "/" + name).isDirectory())
-        	{
-        		folderCounter++;
-        	}
+	        for(String name : names)
+	        {
+	        	if(new File(dir + "/" + name).isDirectory())
+	        	{
+	        		folderCounter++;
+	        	}
+	        }
         }
 	    
         if(folderCounter != 0)
@@ -71,15 +75,28 @@ public class PhotographedObjectsActivity extends Activity {
 					
 					int selectedId = rg.getCheckedRadioButtonId();
 					RadioButton selectedRadioButton = (RadioButton) findViewById(selectedId);
-					
 					Intent intent_start = new Intent(PhotographedObjectsActivity.this, StartActivity.class);
 					Bundle b = new Bundle();
-					b.putString("objectname", selectedRadioButton.getText().toString()); 
+					if(selectedId != -1) //there is a selected radio button
+					{
+						b.putString("objectname", selectedRadioButton.getText().toString()); 
+					}
+					else //there isn't any selected radio button
+					{
+						b.putString("objectname", ""); 
+					}
 					intent_start.putExtras(b);
 					startActivity(intent_start);
 				}
 		    	
 		    });
+        }
+        else
+        {
+        	TextView historyEmpty = new TextView(this);
+        	historyEmpty.setText("There are no photos in the history");
+        	ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
+        	layout.addView(historyEmpty);
         }
 	}
 }
