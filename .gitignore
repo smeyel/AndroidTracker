@@ -5,7 +5,6 @@
 *.fdb_latexmk
 *.aux
 *.fls
-*.log
 *.tps
 *.synctex.gz
 *.backup
@@ -19,3 +18,12 @@ libs/
 obj/
 *.toc
 .metadata/
+*.jpg
+Debug/
+ipch/
+Release/
+*.txt
+*.exe
+*.tlog
+*.sdf
+*.suo
