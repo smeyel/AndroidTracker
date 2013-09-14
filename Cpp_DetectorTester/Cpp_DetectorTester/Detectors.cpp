@@ -2,19 +2,42 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <fstream>
 
-#define RECT
-
 using namespace cv;
 using namespace std;
 
-//constructor for cascade classifier
-Detectors :: Detectors(string cascadeFilePath)
+//constructor for one cascade classifier
+Detectors :: Detectors(string cascadeFilePath, string detectorName)
 {
-	if(!objectCascade.load(cascadeFilePath))
+	CascadeClassifier classTemp;
+	if(!classTemp.load(cascadeFilePath))
 	{
 		cout << "Error while loading the xml file\n";
 		exit(0);
 	}
+	objectCascadeVec.push_back(classTemp);
+
+	this->detectorNames.push_back(detectorName);
+}
+
+//constructor for comparison of two cascade classifiers
+Detectors :: Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2)
+{
+	CascadeClassifier classTemp;
+	if(!classTemp.load(cascadeFilePath_1))
+	{
+		cout << "Error while loading the xml file\n";
+		exit(0);
+	}
+	objectCascadeVec.push_back(classTemp);
+	this->detectorNames.push_back(detectorName_1);
+
+	if(!classTemp.load(cascadeFilePath_2))
+	{
+		cout << "Error while loading the xml file\n";
+		exit(0);
+	}
+	objectCascadeVec.push_back(classTemp);
+	this->detectorNames.push_back(detectorName_2);
 }
 
 //detector will be called and found objects will be marked
@@ -22,27 +45,37 @@ void Detectors :: cascadeDetectAndDisplay(Mat image)
 {
     std::vector<Rect> objects;
     Mat frame_gray;
+	string box_text;
 
     cvtColor( image, frame_gray, COLOR_BGR2GRAY );
     equalizeHist( frame_gray, frame_gray );
 
-    //Detect objects
-	objectCascade.detectMultiScale( frame_gray, objects, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+	for(unsigned int detNum=0; detNum < objectCascadeVec.size(); detNum++)
+	{
+		//Detect objects
+		objectCascadeVec[detNum].detectMultiScale( frame_gray, objects, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
 
-    for ( size_t i = 0; i < objects.size(); i++ )
-    {
-
-#ifdef CIRCLE
-		//Mark with circle
-        Point center( objects[i].x + objects[i].width/2, objects[i].y + objects[i].height/2 );
-        ellipse( image, center, Size( objects[i].width/2, objects[i].height/2 ), 0, 0, 360, Scalar( 255, 0, 255 ), 4, 8, 0 );
-#endif
-#ifdef RECT
-		//Mark with rectangle
-		Rect currentObject = objects[i];
-		rectangle(image, currentObject, CV_RGB(0, 255,0), 1);
-#endif
-    }
+		for ( size_t i = 0; i < objects.size(); i++ )
+		{
+			//Mark with rectangle
+			Rect currentObject = objects[i];
+			switch(detNum)
+			{
+			case 0:
+				rectangle(image, currentObject, CV_RGB(255, 0, 0), 2);
+				box_text = detectorNames[detNum];
+				putText(image, box_text, Point(0, 20), FONT_HERSHEY_COMPLEX_SMALL, 1, CV_RGB(255,0,0), 2);
+				break;
+			case 1:
+				rectangle(image, currentObject, CV_RGB(0, 255, 0), 2);
+				box_text = detectorNames[detNum];
+				putText(image, box_text, Point(0, 50), FONT_HERSHEY_COMPLEX_SMALL, 1, CV_RGB(0,255,0), 2);
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }
 
 //loads the names of test images from the info file
@@ -75,12 +108,12 @@ void Detectors :: runTest(string testPicturesPath,string outputPath)
 	stringstream sstm;
 	Mat image;
 
-	for(int i=1; i<= testImageNames.size(); i++)
+	for(unsigned int i=1; i<= testImageNames.size(); i++)
 	{
 		fileNameAndPath = testPicturesPath + testImageNames[i-1];
 		image = imread(fileNameAndPath, CV_LOAD_IMAGE_ANYCOLOR);
         
-		//Apply the classifier to the frame
+		//Apply the classifier to the image
         cascadeDetectAndDisplay( image );
 		sstm << "TestResult/" << i << ".jpg";
 		imwrite(sstm.str(), image);

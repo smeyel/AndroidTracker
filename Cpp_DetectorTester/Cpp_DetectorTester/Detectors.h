@@ -11,11 +11,14 @@ using std:: string;
 class Detectors
 {
 private:
-	cv::CascadeClassifier objectCascade;
+	vector<cv::CascadeClassifier> objectCascadeVec;
 	vector<string> testImageNames;
+	vector<string> detectorNames;
 	void cascadeDetectAndDisplay(cv::Mat image);
+
 public:
-	Detectors(string cascadeFilePath);
+	Detectors(string cascadeFilePath, string detectorName);
+	Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2);
 	bool loadTestImageNames(string testInfoFilePath);
 	void runTest(string testPicturesPath,string outputPath);
 };
