@@ -6,8 +6,20 @@ using namespace cv;
 using namespace std;
 
 //constructor for one cascade classifier
-Detectors :: Detectors(string cascadeFilePath, string detectorName)
+Detectors :: Detectors(string cascadeFilePath, string detectorName, int detectedCounter)
 {
+	if(detectedCounter < 1 )
+	{
+		detectedCounter = 1; //default
+	}
+
+	vector<int> tempVec;
+	for(int i=0; i <= detectedCounter + 1 ; i++)
+	{
+		tempVec.push_back(0);
+	}
+	numDetectedObjects.push_back(tempVec);
+
 	CascadeClassifier classTemp;
 	if(!classTemp.load(cascadeFilePath))
 	{
@@ -20,8 +32,23 @@ Detectors :: Detectors(string cascadeFilePath, string detectorName)
 }
 
 //constructor for comparison of two cascade classifiers
-Detectors :: Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2)
+Detectors :: Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2, int detectedCounter)
 {
+	if(detectedCounter < 1 )
+	{
+		detectedCounter = 1; //default
+	}
+
+	vector<int> tempVec;
+	for(int i=0; i <= detectedCounter +1 ; i++)
+	{
+		tempVec.push_back(0);//for the first detector
+	}
+
+
+	//numDetectedObjects.push_back(tempVec);
+	numDetectedObjects.push_back(tempVec);
+
 	CascadeClassifier classTemp;
 	if(!classTemp.load(cascadeFilePath_1))
 	{
@@ -43,9 +70,10 @@ Detectors :: Detectors(string cascadeFilePath_1, string detectorName_1, string c
 //detector will be called and found objects will be marked
 void Detectors :: cascadeDetectAndDisplay(Mat image)
 {
-    std::vector<Rect> objects;
+    vector<Rect> objects;
     Mat frame_gray;
 	string box_text;
+
 
     cvtColor( image, frame_gray, COLOR_BGR2GRAY );
     equalizeHist( frame_gray, frame_gray );
@@ -54,6 +82,20 @@ void Detectors :: cascadeDetectAndDisplay(Mat image)
 	{
 		//Detect objects
 		objectCascadeVec[detNum].detectMultiScale( frame_gray, objects, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
+		
+		if(objects.size() == 0)
+		{
+			numDetectedObjects[detNum][0]++;
+		}
+		else if(objects.size() <= numDetectedObjects.size())
+		{
+			numDetectedObjects[detNum][objects.size()]++;
+		}
+		else
+		{
+			numDetectedObjects[detNum][numDetectedObjects.size()+1]++;
+		}
+		
 
 		for ( size_t i = 0; i < objects.size(); i++ )
 		{
@@ -101,23 +143,46 @@ bool Detectors :: loadTestImageNames(string testInfoFilePath)
 	}
 }
 
-//test the classifier, initialization is needed!
+//Test the classifier, an info file named "info.txt" in the testpicture folder is needed! It must contain the names of the testimage files.
 void Detectors :: runTest(string testPicturesPath,string outputPath)
 {
 	string fileNameAndPath;
 	stringstream sstm;
 	Mat image;
+	string infoFilePath = testPicturesPath + "info.txt";
 
-	for(unsigned int i=1; i<= testImageNames.size(); i++)
+	if(!loadTestImageNames(infoFilePath)) //info file contains the list of filenames separated with "\n"
 	{
-		fileNameAndPath = testPicturesPath + testImageNames[i-1];
-		image = imread(fileNameAndPath, CV_LOAD_IMAGE_ANYCOLOR);
+		cout << "Error while loading the testfile names\n";
+	}
+	else
+	{
+		for(unsigned int i=1; i<= testImageNames.size(); i++)
+		{
+			fileNameAndPath = testPicturesPath + testImageNames[i-1];
+			image = imread(fileNameAndPath, CV_LOAD_IMAGE_ANYCOLOR);
         
-		//Apply the classifier to the image
-        cascadeDetectAndDisplay( image );
-		sstm << "TestResult/" << i << ".jpg";
-		imwrite(sstm.str(), image);
-		sstm.str("");
-		cout<<"Picture tested: " << i << ".jpg\n";
+			//Apply the classifier to the image
+			cascadeDetectAndDisplay( image );
+			sstm << "TestResult/" << i << ".jpg";
+			imwrite(sstm.str(), image);
+			sstm.str("");
+			cout<<"Picture tested: " << i << ".jpg\n";
+		}
+
+		for(int i=0; i<numDetectedObjects.size(); i++)
+		{
+			for(int j=0; j<numDetectedObjects[i].size(); j++)
+			{
+				if(j <  numDetectedObjects[i].size() - 1)
+				{
+					cout<<"From " << detectorNames[i]<<" detector "<< numDetectedObjects[i][j] << " pictures are found with "<< j << " objects.\n";
+				}
+				else
+				{
+					cout<<"From " << detectorNames[i]<<" detector "<< numDetectedObjects[i][j] << " pictures are found with "<< "more" << " objects.\n";
+				}
+			}
+		}
 	}
 }

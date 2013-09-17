@@ -13,13 +13,15 @@ class Detectors
 private:
 	vector<cv::CascadeClassifier> objectCascadeVec;
 	vector<string> testImageNames;
-	vector<string> detectorNames;
+	vector<string> detectorNames;										
+	vector< vector<int> > numDetectedObjects;  //[detectornumber][number of pictures, where 'index + 1' objects are found]
+											  // example: numDetectedObjects[0][1] --> Returns that the 0th detector has found 'value' pictures, where 2 objects are found
 	void cascadeDetectAndDisplay(cv::Mat image);
+	bool loadTestImageNames(string testInfoFilePath);
 
 public:
-	Detectors(string cascadeFilePath, string detectorName);
-	Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2);
-	bool loadTestImageNames(string testInfoFilePath);
+	Detectors(string cascadeFilePath, string detectorName, int detectedCounter);
+	Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2, int detectedCounter);
 	void runTest(string testPicturesPath,string outputPath);
 };
 

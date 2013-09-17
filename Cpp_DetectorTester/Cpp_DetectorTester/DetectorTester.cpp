@@ -2,14 +2,15 @@
 
 using namespace cv;
 
+//TODO mappaletrehozas
 int main( void )
 {
-	Detectors HaarVsLbp(
+	Detectors haar("XmlForTest\\L_700_400_20.xml","LBP", 2);
+	haar.runTest("PicturesForTest\\", "TestResult\\");
+	/*Detectors HaarVsLbp(
 		"XmlForTest\\H_700_400_20.xml","Haar", 
-		"XmlForTest\\L_700_400_20.xml", "LBP"); //constructor for comparison used
-
-	HaarVsLbp.loadTestImageNames("PicturesForTest\\info.txt"); //info file contains the list of filenames separated with "\n"
-	HaarVsLbp.runTest("PicturesForTest\\", "TestResult\\"); //important: all folders must exist, that will be used!
+		"XmlForTest\\L_700_400_20.xml", "LBP",2); //constructor for comparison used*/
+	//HaarVsLbp.runTest("PicturesForTest\\", "TestResult\\");
 
 
 	return 0;
