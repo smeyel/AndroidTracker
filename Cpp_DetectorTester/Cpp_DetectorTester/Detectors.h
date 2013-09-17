@@ -21,7 +21,7 @@ private:
 
 public:
 	Detectors(string cascadeFilePath, string detectorName, int detectedCounter);
-	Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2, int detectedCounter);
+	Detectors(vector<string> cascadeFilePaths, vector<string> detectorNames, int detectedCounter);
 	void runTest(string testPicturesPath,string outputPath);
 };
 

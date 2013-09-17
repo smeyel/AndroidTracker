@@ -1,4 +1,5 @@
 #include "Detectors.h"
+#include <direct.h>
 #include "opencv2/highgui/highgui.hpp"
 #include <fstream>
 
@@ -32,7 +33,7 @@ Detectors :: Detectors(string cascadeFilePath, string detectorName, int detected
 }
 
 //constructor for comparison of two cascade classifiers
-Detectors :: Detectors(string cascadeFilePath_1, string detectorName_1, string cascadeFilePath_2, string detectorName_2, int detectedCounter)
+Detectors :: Detectors(vector<string> cascadeFilePaths, vector<string> detectorNames, int detectedCounter)
 {
 	if(detectedCounter < 1 )
 	{
@@ -45,26 +46,18 @@ Detectors :: Detectors(string cascadeFilePath_1, string detectorName_1, string c
 		tempVec.push_back(0);//for the first detector
 	}
 
-
-	//numDetectedObjects.push_back(tempVec);
-	numDetectedObjects.push_back(tempVec);
-
 	CascadeClassifier classTemp;
-	if(!classTemp.load(cascadeFilePath_1))
+	for(int i=0; i< cascadeFilePaths.size(); i++)
 	{
-		cout << "Error while loading the xml file\n";
-		exit(0);
+		numDetectedObjects.push_back(tempVec);
+		if(!classTemp.load(cascadeFilePaths[i]))
+		{
+			cout << "Error while loading the xml file\n";
+			exit(0);
+		}
+		objectCascadeVec.push_back(classTemp);
+		this->detectorNames.push_back(detectorNames[i]);
 	}
-	objectCascadeVec.push_back(classTemp);
-	this->detectorNames.push_back(detectorName_1);
-
-	if(!classTemp.load(cascadeFilePath_2))
-	{
-		cout << "Error while loading the xml file\n";
-		exit(0);
-	}
-	objectCascadeVec.push_back(classTemp);
-	this->detectorNames.push_back(detectorName_2);
 }
 
 //detector will be called and found objects will be marked
@@ -113,6 +106,16 @@ void Detectors :: cascadeDetectAndDisplay(Mat image)
 				box_text = detectorNames[detNum];
 				putText(image, box_text, Point(0, 50), FONT_HERSHEY_COMPLEX_SMALL, 1, CV_RGB(0,255,0), 2);
 				break;
+			case 2:
+				rectangle(image, currentObject, CV_RGB(0, 0, 255), 2);
+				box_text = detectorNames[detNum];
+				putText(image, box_text, Point(0, 80), FONT_HERSHEY_COMPLEX_SMALL, 1, CV_RGB(0,0,255), 2);
+				break;
+			case 3:
+				rectangle(image, currentObject, CV_RGB(0, 0, 0), 2);
+				box_text = detectorNames[detNum];
+				putText(image, box_text, Point(0, 110), FONT_HERSHEY_COMPLEX_SMALL, 1, CV_RGB(0,0,0), 2);
+				break;
 			default:
 				break;
 			}
@@ -150,6 +153,8 @@ void Detectors :: runTest(string testPicturesPath,string outputPath)
 	stringstream sstm;
 	Mat image;
 	string infoFilePath = testPicturesPath + "info.txt";
+	
+	mkdir(outputPath.c_str());
 
 	if(!loadTestImageNames(infoFilePath)) //info file contains the list of filenames separated with "\n"
 	{
@@ -164,7 +169,7 @@ void Detectors :: runTest(string testPicturesPath,string outputPath)
         
 			//Apply the classifier to the image
 			cascadeDetectAndDisplay( image );
-			sstm << "TestResult/" << i << ".jpg";
+			sstm << outputPath << i << ".jpg";
 			imwrite(sstm.str(), image);
 			sstm.str("");
 			cout<<"Picture tested: " << i << ".jpg\n";
