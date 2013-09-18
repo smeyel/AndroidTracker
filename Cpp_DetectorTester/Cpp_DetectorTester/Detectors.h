@@ -18,6 +18,7 @@ private:
 											  // example: numDetectedObjects[0][1] --> Returns that the 0th detector has found 'value' pictures, where 2 objects are found
 	void cascadeDetectAndDisplay(cv::Mat image);
 	bool loadTestImageNames(string testInfoFilePath);
+	bool writeResultsToFile(string path, string fileName);
 
 public:
 	Detectors(string cascadeFilePath, string detectorName, int detectedCounter);

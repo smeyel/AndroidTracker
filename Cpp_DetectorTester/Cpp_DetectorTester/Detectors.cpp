@@ -47,7 +47,7 @@ Detectors :: Detectors(vector<string> cascadeFilePaths, vector<string> detectorN
 	}
 
 	CascadeClassifier classTemp;
-	for(int i=0; i< cascadeFilePaths.size(); i++)
+	for(unsigned int i=0; i< cascadeFilePaths.size(); i++)
 	{
 		numDetectedObjects.push_back(tempVec);
 		if(!classTemp.load(cascadeFilePaths[i]))
@@ -146,6 +146,35 @@ bool Detectors :: loadTestImageNames(string testInfoFilePath)
 	}
 }
 
+bool Detectors :: writeResultsToFile(string path, string fileName)
+{
+	ofstream fileWriter;
+	string pathAndFile = path + fileName;
+	
+	_mkdir(path.c_str());
+	fileWriter.open(pathAndFile);
+
+	for(unsigned int i=0; i<numDetectedObjects.size(); i++)
+	{
+		fileWriter<< detectorNames[i]<<"\n";
+		for(unsigned int j=0; j<numDetectedObjects[i].size(); j++)
+		{
+			if(j <  numDetectedObjects[i].size() - 1)
+			{
+				fileWriter<<j<<";"<< numDetectedObjects[i][j]<<"\n";
+			}
+			else
+			{
+				fileWriter<<"More"<<";"<< numDetectedObjects[i][j]<<"\n";
+				fileWriter<<"Valid"<<";"<<"\n\n";
+			}
+		}
+	}
+
+	fileWriter.close();
+	return 0;
+}
+
 //Test the classifier, an info file named "info.txt" in the testpicture folder is needed! It must contain the names of the testimage files.
 void Detectors :: runTest(string testPicturesPath,string outputPath)
 {
@@ -154,7 +183,7 @@ void Detectors :: runTest(string testPicturesPath,string outputPath)
 	Mat image;
 	string infoFilePath = testPicturesPath + "info.txt";
 	
-	mkdir(outputPath.c_str());
+	_mkdir(outputPath.c_str());
 
 	if(!loadTestImageNames(infoFilePath)) //info file contains the list of filenames separated with "\n"
 	{
@@ -174,20 +203,6 @@ void Detectors :: runTest(string testPicturesPath,string outputPath)
 			sstm.str("");
 			cout<<"Picture tested: " << i << ".jpg\n";
 		}
-
-		for(int i=0; i<numDetectedObjects.size(); i++)
-		{
-			for(int j=0; j<numDetectedObjects[i].size(); j++)
-			{
-				if(j <  numDetectedObjects[i].size() - 1)
-				{
-					cout<<"From " << detectorNames[i]<<" detector "<< numDetectedObjects[i][j] << " pictures are found with "<< j << " objects.\n";
-				}
-				else
-				{
-					cout<<"From " << detectorNames[i]<<" detector "<< numDetectedObjects[i][j] << " pictures are found with "<< "more" << " objects.\n";
-				}
-			}
-		}
+		writeResultsToFile(outputPath, "result.csv");
 	}
 }

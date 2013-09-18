@@ -1,9 +1,13 @@
 #include "Detectors.h"
 
+#define MORE_DETECTOR
+
 using namespace cv;
 
 int main( void )
 {
+
+#ifdef MORE_DETECTOR
 	vector<string> cascadeFilePaths;
 	vector<string> detectorNames;
 
@@ -16,6 +20,12 @@ int main( void )
 
 	Detectors haarVsLBP(cascadeFilePaths,detectorNames, 2);
 	haarVsLBP.runTest("PicturesForTest\\", "NewDir\\");
+#endif
+
+#ifdef ONE_DETECTOR
+	Detectors haar("XmlForTest\\L_700_400_20.xml","Haar", 3);
+	haar.runTest("PicturesForTest\\", "NewDir\\");
+#endif
 
 	return 0;
 }
