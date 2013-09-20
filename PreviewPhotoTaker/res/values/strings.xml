@@ -6,10 +6,11 @@
     <string name="main_title">Preview Picture Taker</string>
     <string name="start_label">Start</string>
     <string name="text_label">Empty</string>
-    <string name="createcsv_label">Update .csv file</string>
+    <string name="createcsv_label">Update info files</string>
     <string name="nameofobject_label">Photographed object:</string>
     <string name="choose_label"> Choose used objects</string>
-    
+    <string name="automated_button">Automated</string>
+    <string name="stop_button">Stop</string>
 
 </resources>
 

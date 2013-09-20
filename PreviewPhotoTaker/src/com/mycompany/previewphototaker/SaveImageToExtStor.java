@@ -15,15 +15,16 @@ import org.opencv.core.Mat;
 import android.graphics.Bitmap;
 import android.os.Environment;
 
-public class SaveImageToSD {
+public class SaveImageToExtStor {
 
 	/**
-	 * Saves a Mat to the SD card to "PhotosForResearch" folder as a jpg. Filename is generated for the saved image.
+	 * Saves a Mat to the external storage to "PhotosForResearch" folder as a jpg. Filename is generated for the saved image.
 	 * 
 	 * @param source The image to save.
 	 * @param directoryName The directory where the 
+	 * @return The name of the saved file.
 	 */
-	public void saveJpegImage(Mat source, String directoryName){
+	public String saveJpegImage(Mat source, String directoryName){
 
 	    Mat mat = source.clone();
 	    
@@ -32,6 +33,7 @@ public class SaveImageToSD {
 	    Bitmap bmpOut = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
 	    Utils.matToBitmap(mat, bmpOut);
 	    if (bmpOut != null){
+	    	
 	    	mat.release();
 	    	OutputStream fout = null;
 	    	String root = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -60,6 +62,7 @@ public class SaveImageToSD {
 	        }
 	    }
 	    bmpOut.recycle();
+	    return filename;
 	}
 	
 	/**
@@ -82,10 +85,17 @@ public class SaveImageToSD {
 			    if (f.isFile())
 			    {
 			    	fileName = f.getName();
-			    	index = fileName.indexOf(".jpg");
-			    	fileName = fileName.substring(0,index);
-			    	allFileNamesInt.add(fileCounter, Integer.parseInt(fileName));
-			    	fileCounter++;
+			    	if(fileName.indexOf(".jpg") != -1)
+			    	{
+				    	index = fileName.indexOf(".jpg");
+				    	fileName = fileName.substring(0,index);
+				    	/*fileNameIntTemp=Integer.getInteger(fileName);
+				    	if(fileNameIntTemp != null)
+				    	{*/
+					    allFileNamesInt.add(fileCounter, Integer.parseInt(fileName));
+					    fileCounter++;
+				    	//}
+			    	}
 			    }
 			}
 			Collections.sort(allFileNamesInt);
