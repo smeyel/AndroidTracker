@@ -86,7 +86,7 @@ void Detectors :: cascadeDetectAndDisplay(Mat image)
 		}
 		else
 		{
-			numDetectedObjects[detNum][numDetectedObjects.size()+1]++;
+			numDetectedObjects[detNum][numDetectedObjects.size()]++;
 		}
 		
 
@@ -136,7 +136,10 @@ bool Detectors :: loadTestImageNames(string testInfoFilePath)
 		{
 			infile.getline(tempCharArr,250);
 			tempString = tempCharArr;
-			testImageNames.push_back(tempString);
+			if(tempString.find(".jpg") != string::npos) //if the file is .jpg
+			{
+				testImageNames.push_back(tempString);
+			}
 		}
 		return true; //names loaded succesfully
 	}

@@ -15,11 +15,11 @@ int main( void )
 	cascadeFilePaths.push_back("XmlForTest\\H_700_400_20.xml");
 	cascadeFilePaths.push_back("XmlForTest\\H_500_200_20.xml");
 	detectorNames.push_back("LBP_700_400_20");
-	detectorNames.push_back("Haar_700_400_20");
+	detectorNames.push_back("Haar_700_400_18");
 	detectorNames.push_back("Haar_500_200_20");
 
 	Detectors haarVsLBP(cascadeFilePaths,detectorNames, 2);
-	haarVsLBP.runTest("PicturesForTest\\", "NewDir\\");
+	haarVsLBP.runTest("bmw_papir\\", "TestResults\\bmw_papir\\");
 #endif
 
 #ifdef ONE_DETECTOR
