@@ -8,7 +8,7 @@
 using std:: vector;
 using std:: string;
 
-class Detectors
+class DetectorTester
 {
 private:
 	vector<cv::CascadeClassifier> objectCascadeVec;
@@ -21,9 +21,10 @@ private:
 	bool writeResultsToFile(string path, string fileName);
 
 public:
-	Detectors(string cascadeFilePath, string detectorName, int detectedCounter);
-	Detectors(vector<string> cascadeFilePaths, vector<string> detectorNames, int detectedCounter);
-	void runTest(string testPicturesPath,string outputPath);
+	DetectorTester(string cascadeFilePath, string detectorName, int detectedCounter);
+	DetectorTester(vector<string> cascadeFilePaths, vector<string> detectorNames, int detectedCounter);
+	void runTest(string testPicturesPath, string outputPath);
+	void createCannyImages(string testPicturesPath, string outputPath);
 };
 
 #endif
