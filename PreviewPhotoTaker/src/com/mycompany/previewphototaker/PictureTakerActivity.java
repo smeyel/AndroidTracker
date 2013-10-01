@@ -11,11 +11,14 @@ import org.opencv.core.Mat;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +28,9 @@ public class PictureTakerActivity extends Activity implements CvCameraViewListen
 	private CameraBridgeViewBase mOpenCvCameraView;
 	private Mat mRgba;
 	private String objectName; //name of the object, that will be photographed
+	SaveImageToExtStor save = new SaveImageToExtStor();
+	boolean autoSaveFlag =false;
+	int counter=0;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +50,25 @@ public class PictureTakerActivity extends Activity implements CvCameraViewListen
 		
 		TextView objectNameTextView = (TextView) findViewById(R.id.objectname_textview);
 		objectNameTextView.setText(objectName);
+		
+		final Button autoButton = (Button) findViewById(R.id.automated_button);
+		autoButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				if(autoSaveFlag == false)
+				{
+					autoSaveFlag = true;
+					autoButton.setText(getString(R.string.stop_button));
+				}
+				else
+				{
+					autoSaveFlag = false;
+					autoButton.setText(getString(R.string.automated_button));
+				}
+				
+			}
+		});
 	}
 
 	@Override
@@ -83,10 +108,13 @@ public class PictureTakerActivity extends Activity implements CvCameraViewListen
                 case LoaderCallbackInterface.SUCCESS:
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
-                                     
+                    
+                    
+                    
                     /* OpenCV specific init, enable camera view */
                     mOpenCvCameraView.setOnTouchListener(PictureTakerActivity.this);
                     mOpenCvCameraView.enableView();
+                    mOpenCvCameraView.enableFpsMeter();
                     
                 } break;
                 default:
@@ -108,13 +136,34 @@ public class PictureTakerActivity extends Activity implements CvCameraViewListen
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
     	inputFrame.rgba().copyTo(mRgba);
+    	if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+    	{
+	    	if(autoSaveFlag)
+	    	{
+	    		counter++;
+	    		if(counter % 3 == 0) //save every 3th frame
+	    		{
+	    			save.saveJpegImage(mRgba, objectName);
+	    			counter=0;
+	    		}
+	    	}
+    	}
     	return mRgba;
     }
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-    	SaveImageToSD save = new SaveImageToSD();
-    	save.saveJpegImage(mRgba, objectName);
-    	Toast.makeText(getApplicationContext(), "Image saved", Toast.LENGTH_SHORT).show();
+    	if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
+    	{
+    		if(autoSaveFlag == false)
+    		{
+		    	String savedFileName = save.saveJpegImage(mRgba, objectName);
+		    	Toast.makeText(getApplicationContext(), "Image " + savedFileName + " saved", Toast.LENGTH_SHORT).show();
+    		}
+    	}
+    	else
+    	{
+    		Toast.makeText(getApplicationContext(), "External storage not found!", Toast.LENGTH_SHORT).show();
+    	}
     	return false;
     }
 }

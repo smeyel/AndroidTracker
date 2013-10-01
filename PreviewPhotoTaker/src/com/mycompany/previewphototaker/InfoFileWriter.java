@@ -6,23 +6,21 @@ import java.io.IOException;
 
 import android.os.Environment;
 
-public class CSVFileEditor {
+public class InfoFileWriter {
 	
 	/**
-	 * Creates a .csv file from the folders and files in the PhotosForResearch folder.
+	 * Creates a .txt file in each folder.The .txt contains the filenames in the folder.
 	 * If there is an existing file, with the given filename, it will be overwritten.
 	 * 
-	 * @param filename Name of the .csv file, witch will be created.
+	 * @param filename Name of the .txt file, witch will be created.
 	 */
-	public void csvCreate(String filename) {
+	public void writeInfoFiles(String filename) {
 		
 		try
 	    {
+			FileWriter writer = null;
 			String root = Environment.getExternalStorageDirectory().getAbsolutePath();
 			String dir = root + "/" + "PhotosForResearch";
-			String fileNameWithType = filename + ".csv";
-	        File tempfile = new File(dir, fileNameWithType);
-	        FileWriter writer = new FileWriter(tempfile);
 	        
 	        File foldersandfilesDir = new File(dir);
 	        String[] names = foldersandfilesDir.list();
@@ -30,22 +28,30 @@ public class CSVFileEditor {
 	        {
 	        	if(new File(dir + "/" + name).isDirectory())
 	        	{
-	        		File fileDir = new File(dir + "/" + name);
-	        		File[] listedFiles = fileDir.listFiles();
+	        		File filesDir = new File(dir + "/" + name);
+	        		
+	        		String fileNameWithType = filename + ".txt";
+	    	        File tempfile = new File(filesDir, fileNameWithType);
+	    	        writer = new FileWriter(tempfile);
+	    	        
+	        		File[] listedFiles = filesDir.listFiles();
 	        		if(listedFiles != null)
 	        		{
 	        			for (File f : listedFiles) {
 	        			    if (f.isFile())
 	        			    {
-	        			    	writer.append(fileDir.getAbsolutePath() + "/" + f.getName());
-	        			    	writer.append("\n");
+	        			    	if(fileNameWithType.compareTo(f.getName()) != 0)
+	        			    	{
+		        			    	writer.append(f.getName());
+		        			    	writer.append("\r\n");
+	        			    	}
 	        			    }
 	        			}
 	        		}
+	        		writer.flush();
+	    	        writer.close();
 	        	}
 	        }
-	        writer.flush();
-	        writer.close();
 	    }
 	    catch(IOException e)
 	    {
