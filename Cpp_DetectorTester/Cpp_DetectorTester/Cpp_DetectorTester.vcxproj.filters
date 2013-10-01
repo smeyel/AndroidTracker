@@ -21,15 +21,9 @@
     <ClCompile Include="DetectorTester.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CannyTools.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DetectorTester.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CannyTools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

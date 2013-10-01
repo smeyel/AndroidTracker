@@ -1,5 +1,4 @@
 #include "DetectorTester.h"
-#include "CannyTools.h"
 
 //#define MORE_DETECTOR
 #define CANNYTEST
