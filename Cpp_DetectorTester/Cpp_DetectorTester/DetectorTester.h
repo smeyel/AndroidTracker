@@ -8,6 +8,7 @@
 using std:: vector;
 using std:: string;
 using cv:: Mat;
+using cv:: CascadeClassifier;
 
 class DetectorTools
 {
@@ -19,10 +20,11 @@ protected:
 class DetectorTester : protected DetectorTools
 {
 private:
-	vector<cv::CascadeClassifier> objectCascadeVec;
+	vector<CascadeClassifier> objectCascadeVec;
 	vector<string> detectorNames;										
 	vector< vector<int> > numDetectedObjects;  //[detectornumber][number of pictures, where 'index + 1' objects are found]
 											  // example: numDetectedObjects[0][1] --> Returns that the 0th detector has found 'value' pictures, where 2 objects are found
+	int detectedCounter;
 	void cascadeDetectAndDisplay(cv::Mat image);
 	bool writeResultsToFile(string path, string fileName);
 

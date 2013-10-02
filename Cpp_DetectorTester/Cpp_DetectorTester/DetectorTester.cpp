@@ -40,6 +40,8 @@ DetectorTester :: DetectorTester(string cascadeFilePath, string detectorName, in
 		detectedCounter = 1; //default
 	}
 
+	this->detectedCounter = detectedCounter;
+
 	vector<int> tempVec;
 	for(int i=0; i <= detectedCounter + 1 ; i++)
 	{
@@ -65,6 +67,8 @@ DetectorTester :: DetectorTester(vector<string> cascadeFilePaths, vector<string>
 	{
 		detectedCounter = 1; //default
 	}
+
+	this->detectedCounter = detectedCounter;
 
 	vector<int> tempVec;
 	for(int i=0; i <= detectedCounter +1 ; i++)
@@ -106,13 +110,13 @@ void DetectorTester :: cascadeDetectAndDisplay(Mat image)
 		{
 			numDetectedObjects[detNum][0]++;
 		}
-		else if(objects.size() <= numDetectedObjects.size())
+		else if(objects.size() <= detectedCounter)
 		{
 			numDetectedObjects[detNum][objects.size()]++;
 		}
 		else
 		{
-			numDetectedObjects[detNum][numDetectedObjects.size()]++;
+			numDetectedObjects[detNum][detectedCounter+1]++;
 		}
 		
 
