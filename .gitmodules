@@ -1,0 +1,6 @@
+[submodule "Framework"]
+	path = Framework
+	url = git@github.com:smeyel/Framework.git
+[submodule "ImageProcessing"]
+	path = ImageProcessing
+	url = git@github.com:smeyel/ImageProcessing.git

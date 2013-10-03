@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="configcat1title">Configuration settings</string>
+    
+    <string name="configUseLocalConfig">Use local configurations</string>
+    <string name="configUseLocalConfigSummary">Use configurations specified here</string>
+    <string name="configFileLocation">Config file location</string>
+    <string name="configFileLocationSummary">Location of the INI file containing configurations</string>
+    
+</resources>
