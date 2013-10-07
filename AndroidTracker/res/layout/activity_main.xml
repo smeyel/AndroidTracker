@@ -11,11 +11,13 @@
     tools:context=".MainActivity"
     -->
 
-    <org.opencv.android.JavaCameraView
+    <com.aut.smeyel.CameraPreview
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/opencv_start_surface_view"
+        android:visibility="gone"
+        android:id="@+id/androidtracker_surface_view"
         opencv:show_fps="true"
-        opencv:camera_id="back" />
+        opencv:camera_id="any" />
+    
 
 </RelativeLayout>

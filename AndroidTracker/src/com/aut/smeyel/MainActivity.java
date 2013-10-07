@@ -1,7 +1,11 @@
 package com.aut.smeyel;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+
 import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
@@ -12,30 +16,146 @@ import org.opencv.core.Mat;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.Camera;
+import android.hardware.Camera.PictureCallback;
+import android.hardware.Camera.ShutterCallback;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SurfaceView;
 import android.view.View;
+import android.view.WindowManager;
 
-import com.aut.smeyel.R;
+import com.ol.research.measurement.TimeMeasurement;
+
+/**
+ * 
+ * MainActivity of the application (UI thread). <br>
+ * It starts the CommsThread, and if picture was taken, the SendImageService is started from here.<br>
+ * Contains the time measurement points.<br>
+ * <br>
+ * @author Milan Tenk <br>
+ * <br>
+ * Callbacks:<br>
+ * PictureCallback: If the taken photo is ready, here will be the SendImageService started, the picture can be saved to SD card.<br>
+ * ShutterCallback: Called right after taking photo.<br>
+ * BaseLoaderCallback: Needed for OpenCV initialization.<br>
+ * <br>
+ * Handler: Handles the messages, that are written to the screen.<br>
+ * <br>
+ * Methods:<br>
+ * onCreate: Will be called at the start of the activity, Commsthread will be started.<br>
+ * onResume: Called, when the user is interfacing with the application. Contains the initialization of OpenCV.<br>
+ * onStop: Called, when the activity is stopped.<br>
+ * getLocalIpAddress: Determines the IP address of the Phone.<br>
+ * httpReg: Registrates the phone on the specified Server.<br>
+ */
 
 public class MainActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener {
 	
+	private enum OperatingMode {
+		IDLE, POS, PIC
+	}
+	private OperatingMode currentOperatingMode = OperatingMode.POS;
+	
 	private static final String TAG = "SMEyeL::AndroidTracker::MainActivity";
-	private CameraBridgeViewBase mOpenCvCameraView;
+//	private CameraBridgeViewBase mOpenCvCameraView;
+	private CameraPreview mOpenCvCameraView;
 	private Mat mRgba;
 	private Mat mGray;
 	
 	private Mat mResult;
 	
-	public static boolean openCVLoaded = false;
-	public static final int SERVERPORT = 6000;
-	public static final int MSG_ID = 0x1337;
+	protected static final int MSG_ID = 0x1337;
+	protected static final int SERVERPORT = 6000;
+	protected static final int TIME_ID = 0x1338;
+	private boolean saveToSD = false;
+	//	private static final String  TAG = "TMEAS";
+	ServerSocket ss = null;
+	static String mClientMsg = "";
+	static byte[] lastPhotoData;
+	static long OnShutterEventTimestamp;
+	static Object syncObj = new Object();
 	
 	Thread myCommsThread = null;
+	String current_time = null;
+
+//	CameraPreview mPreview;
+	Camera mCamera;
+
+	private PictureCallback mPicture = new PictureCallback() {
+
+		@Override
+		public void onPictureTaken(byte[] data, Camera camera) {
+			CommsThread.TM.Stop(CommsThread.PostProcessJPEGMsID);
+			CommsThread.TM.Start(CommsThread.PostProcessPostJpegMsID);
+			//Option to save the picture to SD card
+			if(saveToSD)
+			{
+				String pictureFile = Environment.getExternalStorageDirectory().getPath()+"/custom_photos"+"/__1.jpg";
+				try {
+					FileOutputStream fos = new FileOutputStream(pictureFile);
+					fos.write(data);
+					fos.close();   
+
+				} catch (FileNotFoundException e) {
+					Log.d("Photographer", "File not found: " + e.getMessage());
+				} catch (IOException e) {
+					Log.d("Photographer", "Error accessing file: " + e.getMessage());
+				}
+				Log.v("Photographer", "Picture saved at path: " + pictureFile);
+			}
+			lastPhotoData = data;
+			synchronized (syncObj) //notifys the Commsthread, if the picture is complete
+			{
+				CommsThread.isPictureComplete = true;
+				syncObj.notifyAll();
+			}
+//			mCamera.startPreview();
+		}
+	};
+
+	private ShutterCallback mShutter = new ShutterCallback()
+	{
+		@Override
+		public void onShutter()
+		{
+			OnShutterEventTimestamp = TimeMeasurement.getTimeStamp();
+			current_time = String.valueOf(OnShutterEventTimestamp); 
+			CommsThread.TM.Stop(CommsThread.TakePictureMsID);   
+			CommsThread.TM.Start(CommsThread.PostProcessJPEGMsID);
+			Message timeMessage = new Message();
+			timeMessage.what = TIME_ID;
+			myUpdateHandler.sendMessage(timeMessage);
+		}
+	};
+	
+	//Handler a socketüzenet számára
+	private Handler myUpdateHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MSG_ID:
+//				TextView tv = (TextView) findViewById(R.id.TextView_receivedme);
+//				tv.setText(mClientMsg);
+				break;
+			case TIME_ID:
+//				TextView tv2 = (TextView) findViewById(R.id.TextView_timegot);
+//				tv2.setText(current_time);
+				break;
+			default:
+
+				break;
+			}
+			super.handleMessage(msg);
+		}
+	};
 	
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 
@@ -44,8 +164,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
+                	TimeMeasurement.isOpenCVLoaded = true;
                     Log.i(TAG, "OpenCV loaded successfully");
-                    openCVLoaded = true;
 
                     /* OpenCV specific init, for example: enable camera view */
                     
@@ -68,6 +188,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setContentView(R.layout.activity_main);
 		
 		PreferenceManager.setDefaultValues(this, R.xml.settingsscreen, false);
@@ -79,10 +200,13 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 //		editor.putBoolean("pref_config1", true);
 //		editor.commit();
 		
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.opencv_start_surface_view);
+        mOpenCvCameraView = (CameraPreview) findViewById(R.id.androidtracker_surface_view);
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         
-        myCommsThread = new Thread(new CommsThread());
+        mCamera = mOpenCvCameraView.getCamera();
+        
+        myCommsThread = new Thread(new CommsThread(myUpdateHandler, mCamera, mPicture, mShutter, ss));
 		myCommsThread.start();
 	}
 
