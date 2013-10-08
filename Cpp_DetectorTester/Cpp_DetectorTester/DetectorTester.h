@@ -42,4 +42,10 @@ public:
 	Mat doCannyOnMat(Mat sourceImage, int lowThreshold, int kernel_size, int ratio = 3); //2:1 or 3:1 ratio is recommended 
 };
 
+class CrossValidationTools
+{
+public:
+	void createFourFilesFromAnnotatedFile(string filePath);
+};
+
 #endif

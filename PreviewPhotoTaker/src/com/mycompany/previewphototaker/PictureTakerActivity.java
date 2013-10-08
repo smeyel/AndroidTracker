@@ -82,7 +82,7 @@ public class PictureTakerActivity extends Activity implements CvCameraViewListen
     public void onResume()
     {
 	    super.onResume();
-	    OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+	    OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
     }
 	
 	@Override
