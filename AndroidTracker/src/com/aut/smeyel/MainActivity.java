@@ -75,11 +75,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	protected static final int MSG_ID = 0x1337;
 	protected static final int SERVERPORT = 6000;
 	protected static final int TIME_ID = 0x1338;
-	private boolean saveToSD = false;
 	//	private static final String  TAG = "TMEAS";
 	ServerSocket ss = null;
 	static String mClientMsg = "";
-	static byte[] lastPhotoData;
 	static long OnShutterEventTimestamp;
 	static Object syncObj = new Object();
 	
@@ -87,39 +85,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	String current_time = null;
 
 //	CameraPreview mPreview;
-	Camera mCamera;
-
-	private PictureCallback mPicture = new PictureCallback() {
-
-		@Override
-		public void onPictureTaken(byte[] data, Camera camera) {
-			CommsThread.TM.Stop(CommsThread.PostProcessJPEGMsID);
-			CommsThread.TM.Start(CommsThread.PostProcessPostJpegMsID);
-			//Option to save the picture to SD card
-			if(saveToSD)
-			{
-				String pictureFile = Environment.getExternalStorageDirectory().getPath()+"/custom_photos"+"/__1.jpg";
-				try {
-					FileOutputStream fos = new FileOutputStream(pictureFile);
-					fos.write(data);
-					fos.close();   
-
-				} catch (FileNotFoundException e) {
-					Log.d("Photographer", "File not found: " + e.getMessage());
-				} catch (IOException e) {
-					Log.d("Photographer", "Error accessing file: " + e.getMessage());
-				}
-				Log.v("Photographer", "Picture saved at path: " + pictureFile);
-			}
-			lastPhotoData = data;
-			synchronized (syncObj) //notifys the Commsthread, if the picture is complete
-			{
-				CommsThread.isPictureComplete = true;
-				syncObj.notifyAll();
-			}
-//			mCamera.startPreview();
-		}
-	};
+//	Camera mCamera;
 
 	private ShutterCallback mShutter = new ShutterCallback()
 	{
@@ -204,9 +170,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         
-        mCamera = mOpenCvCameraView.getCamera();
-        
-        myCommsThread = new Thread(new CommsThread(myUpdateHandler, mCamera, mPicture, mShutter, ss));
+        myCommsThread = new Thread(new CommsThread(mOpenCvCameraView, myUpdateHandler, mShutter, ss));
 		myCommsThread.start();
 	}
 

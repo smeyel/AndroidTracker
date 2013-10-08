@@ -1,18 +1,28 @@
 package com.aut.smeyel;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.opencv.android.JavaCameraView;
 
+
+
+
+
 //import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.PictureCallback;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 //import android.view.Surface;
 import android.view.SurfaceHolder;
 
-public class CameraPreview extends JavaCameraView {
+public class CameraPreview extends JavaCameraView implements PictureCallback {
+	private boolean saveToSD = false;
+	byte[] lastPhotoData;
 //	Camera mCamera;
 //	SurfaceHolder mHolder;
 
@@ -36,6 +46,35 @@ public class CameraPreview extends JavaCameraView {
 	
 	public Camera getCamera(){
 		return mCamera;
+	}
+
+	@Override
+	public void onPictureTaken(byte[] data, Camera camera) {
+		CommsThread.TM.Stop(CommsThread.PostProcessJPEGMsID);
+		CommsThread.TM.Start(CommsThread.PostProcessPostJpegMsID);
+		//Option to save the picture to SD card
+		if(saveToSD)
+		{
+			String pictureFile = Environment.getExternalStorageDirectory().getPath()+"/custom_photos"+"/__1.jpg";
+			try {
+				FileOutputStream fos = new FileOutputStream(pictureFile);
+				fos.write(data);
+				fos.close();   
+
+			} catch (FileNotFoundException e) {
+				Log.d("Photographer", "File not found: " + e.getMessage());
+			} catch (IOException e) {
+				Log.d("Photographer", "Error accessing file: " + e.getMessage());
+			}
+			Log.v("Photographer", "Picture saved at path: " + pictureFile);
+		}
+		lastPhotoData = data;
+		synchronized (MainActivity.syncObj) //notifys the Commsthread, if the picture is complete
+		{
+			CommsThread.isPictureComplete = true;
+			MainActivity.syncObj.notifyAll();
+		}
+		mCamera.startPreview();
 	}
 	
 //	@Override

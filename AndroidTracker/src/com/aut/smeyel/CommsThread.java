@@ -34,9 +34,8 @@ import com.ol.research.measurement.*;
  * */
 class CommsThread implements Runnable {
 	
+	private CameraPreview mOpenCvCameraView;
 	Handler handler;
-	Camera mCamera;
-	PictureCallback mPicture;
 	ServerSocket ss;
 	static OutputStream socket_os;
 	static Socket s = null;
@@ -59,11 +58,10 @@ class CommsThread implements Runnable {
 	static int SendingJsonMsID = 9;
 	static int SendingJpegMsID = 10;
 	
-	public CommsThread(Handler hand, Camera mCamera, PictureCallback mPicture, ShutterCallback mShutter, ServerSocket ss)
+	public CommsThread(CameraPreview mOpenCvCameraView, Handler hand, ShutterCallback mShutter, ServerSocket ss)
 	{
+		this.mOpenCvCameraView = mOpenCvCameraView;
 		handler=hand;
-		this.mCamera = mCamera;
-		this.mPicture = mPicture;
 		this.mShutter = mShutter;
 		this.ss = ss;
 		TM.setMeasurementLog(TimeMeasurementResults);
@@ -175,7 +173,7 @@ class CommsThread implements Runnable {
 	                    isPictureComplete = false;	// SendImageService will set this true...
 	                    TM.Stop(WaitingMsID);
 	                    TM.Start(TakePictureMsID);
-	                    mCamera.takePicture(mShutter, null, mPicture); //--------takePicture command
+	                    mOpenCvCameraView.getCamera().takePicture(mShutter, null, mOpenCvCameraView); //--------takePicture command
 	               		
 	                    Log.i(TAG, "Waiting for sync...");
 	                    while(!isPictureComplete)
@@ -193,7 +191,7 @@ class CommsThread implements Runnable {
 	            			// Get output stream from the CommsThread
 	            			OutputStream os = s.getOutputStream();
 	            			// Prepare data to send
-	            			byte[] mybytearray = MainActivity.lastPhotoData;
+	            			byte[] mybytearray = mOpenCvCameraView.lastPhotoData;
 	            			
 	            	        String buff = Integer.toString(mybytearray.length);
 	            	        
