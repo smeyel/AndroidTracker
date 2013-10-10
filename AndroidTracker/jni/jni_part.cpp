@@ -109,9 +109,9 @@ public:
 };
 
 extern "C" {
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FindFeatures(JNIEnv*, jobject, jlong addrGray, jlong addrRgba);
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeFindFeatures(JNIEnv*, jobject, jlong addrGray, jlong addrRgba);
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FindFeatures(JNIEnv*, jobject, jlong addrGray, jlong addrRgba)
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeFindFeatures(JNIEnv*, jobject, jlong addrGray, jlong addrRgba)
 {
     Mat& mGr  = *(Mat*)addrGray;
     Mat& mRgb = *(Mat*)addrRgba;
@@ -126,9 +126,9 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FindFeatures(JNIEnv*, jo
     }
 }
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FindCircles(JNIEnv*, jobject, jlong addrGray, jlong addrRgba);
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeFindCircles(JNIEnv*, jobject, jlong addrGray, jlong addrRgba);
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FindCircles(JNIEnv*, jobject, jlong addrGray, jlong addrRgba)
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeFindCircles(JNIEnv*, jobject, jlong addrGray, jlong addrRgba)
 {
     Mat& mGr  = *(Mat*)addrGray;
     Mat& mRgb = *(Mat*)addrRgba;
@@ -175,9 +175,9 @@ AndroidLogger* logger = NULL;
 
 
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_Init(JNIEnv* env, jobject thisObj, jint width, jint height, jstring configFileLocation);
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeInitTracker(JNIEnv* env, jobject thisObj, jint width, jint height, jstring configFileLocation);
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_Init(JNIEnv* env, jobject thisObj, jint width, jint height, jstring configFileLocation)
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeInitTracker(JNIEnv* env, jobject thisObj, jint width, jint height, jstring configFileLocation)
 {
 	const char *configfilenameConst = env->GetStringUTFChars(configFileLocation, 0);
 
@@ -207,9 +207,9 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_Init(JNIEnv* env, jobjec
 
 }
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FastColor(JNIEnv*, jobject, jlong addrInput, jlong addrResult);
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv*, jobject, jlong addrInput, jlong addrResult);
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FastColor(JNIEnv*, jobject, jlong addrInput, jlong addrResult)
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv*, jobject, jlong addrInput, jlong addrResult)
 {
 	Mat& mInput  = *(Mat*)addrInput;
 	Mat& mResult = *(Mat*)addrResult;
@@ -232,9 +232,9 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_FastColor(JNIEnv*, jobje
 
 }
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_Release(JNIEnv*, jobject);
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeReleaseTracker(JNIEnv*, jobject);
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_Release(JNIEnv*, jobject)
+JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeReleaseTracker(JNIEnv*, jobject)
 {
 	if(tracker != NULL) {
 		delete tracker;
@@ -249,9 +249,9 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_Release(JNIEnv*, jobject
 }
 
 // pulling data, a method with push would be good
-JNIEXPORT jobject JNICALL Java_com_aut_smeyel_CommsThread_GetLastKnownPosition(JNIEnv* env, jobject thisObj);
+JNIEXPORT jobject JNICALL Java_com_aut_smeyel_CommsThread_nativeGetLastKnownPosition(JNIEnv* env, jobject thisObj);
 
-JNIEXPORT jobject JNICALL Java_com_aut_smeyel_CommsThread_GetLastKnownPosition(JNIEnv* env, jobject thisObj)
+JNIEXPORT jobject JNICALL Java_com_aut_smeyel_CommsThread_nativeGetLastKnownPosition(JNIEnv* env, jobject thisObj)
 {
 	jclass trackerData = env->FindClass("com/aut/smeyel/TrackerData");
 	jmethodID cid = env->GetMethodID(trackerData,"<init>","()V");

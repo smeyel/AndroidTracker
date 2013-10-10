@@ -1,8 +1,6 @@
 package com.aut.smeyel;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.ServerSocket;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -16,9 +14,6 @@ import org.opencv.core.Mat;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
-import android.hardware.Camera.ShutterCallback;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -31,6 +26,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.ol.research.measurement.TimeMeasurement;
 
@@ -60,15 +56,17 @@ import com.ol.research.measurement.TimeMeasurement;
 public class MainActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener {
 	
 	private enum OperatingMode {
-		IDLE, POS, PIC
+		IDLE, POSITION_PER_REQUEST, PICTURE_PER_REQUEST, POSITION_STREAM, PICTURE_STREAM
 	}
-	private OperatingMode currentOperatingMode = OperatingMode.POS;
+	private OperatingMode currentOperatingMode = OperatingMode.IDLE;
 	
 	private static final String TAG = "SMEyeL::AndroidTracker::MainActivity";
 //	private CameraBridgeViewBase mOpenCvCameraView;
 	private CameraPreview mOpenCvCameraView;
 	private Mat mRgba;
 	private Mat mGray;
+	private int width;
+	private int height;
 	
 	private Mat mResult;
 	
@@ -78,36 +76,26 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	//	private static final String  TAG = "TMEAS";
 	ServerSocket ss = null;
 	static String mClientMsg = "";
-	static long OnShutterEventTimestamp;
 	static Object syncObj = new Object();
 	
 	Thread myCommsThread = null;
-	String current_time = null;
 
 //	CameraPreview mPreview;
 //	Camera mCamera;
-
-	private ShutterCallback mShutter = new ShutterCallback()
-	{
-		@Override
-		public void onShutter()
-		{
-			OnShutterEventTimestamp = TimeMeasurement.getTimeStamp();
-			current_time = String.valueOf(OnShutterEventTimestamp); 
-			CommsThread.TM.Stop(CommsThread.TakePictureMsID);   
-			CommsThread.TM.Start(CommsThread.PostProcessJPEGMsID);
-			Message timeMessage = new Message();
-			timeMessage.what = TIME_ID;
-			myUpdateHandler.sendMessage(timeMessage);
-		}
-	};
 	
 	//Handler a socketüzenet számára
-	private Handler myUpdateHandler = new Handler() {
+	private MyHandler myUpdateHandler = new MyHandler(this);
+	static class MyHandler extends Handler {
+		private final WeakReference<MainActivity> mActivity;
+		
+		public MyHandler(MainActivity activity) {
+			mActivity = new WeakReference<MainActivity>(activity);
+		}
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case MSG_ID:
+				if(mActivity != null) {}
 //				TextView tv = (TextView) findViewById(R.id.TextView_receivedme);
 //				tv.setText(mClientMsg);
 				break;
@@ -138,8 +126,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
                     // Load native library after(!) OpenCV initialization
                     System.loadLibrary("native_module");
                     
-                    mOpenCvCameraView.setOnTouchListener(MainActivity.this);
                     mOpenCvCameraView.enableView();
+                    mOpenCvCameraView.setOnTouchListener(MainActivity.this);
+                    
                     
 //                    InitMarkerHandler(800, 480);
                 } break;
@@ -167,10 +156,11 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 //		editor.commit();
 		
         mOpenCvCameraView = (CameraPreview) findViewById(R.id.androidtracker_surface_view);
+        mOpenCvCameraView.setHandler(myUpdateHandler);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         
-        myCommsThread = new Thread(new CommsThread(mOpenCvCameraView, myUpdateHandler, mShutter, ss));
+        myCommsThread = new Thread(new CommsThread(mOpenCvCameraView, myUpdateHandler, ss));
 		myCommsThread.start();
 	}
 
@@ -192,13 +182,37 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		return true;
 	}
 	
+	/** initialize operating mode specific resources **/
+	private void init()
+	{
+		switch(currentOperatingMode) {
+			case IDLE: break;
+			case POSITION_PER_REQUEST:
+				SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+				String configLocation = sharedPref.getString("pref_configFileLocation", Environment.getExternalStorageDirectory().getPath() + "rossz.ini");
+				nativeInitTracker(width, height, configLocation);
+				break;
+			default: break;
+		}
+	}
+	
+	/** release operating mode specific resources **/
+	private void release()
+	{
+		switch(currentOperatingMode) {
+			case IDLE: break;
+			case POSITION_PER_REQUEST: nativeReleaseTracker();
+			default: break;
+		}
+	}
+	
 	@Override
     public void onPause()
     {
 		super.onPause();
 		if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-		Release();
+		release();
 		myCommsThread.interrupt();
     }
 
@@ -207,6 +221,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
     {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_5, this, mLoaderCallback);
+        //TODO: myCommsThread should be probably resumed or restarted here (also it should be properly paused/finished in onPause/onDestroy)
     }
 
     @Override
@@ -214,19 +229,20 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-        Release();
+        release();
         myCommsThread.interrupt();
     }
 
 	@Override
-	public void onCameraViewStarted(int width, int height) {
+	public void onCameraViewStarted(int _width, int _height) {
+		width = _width;
+		height = _height;
+		
 		mRgba = new Mat(height, width, CvType.CV_8UC4);
 		mGray = new Mat(height, width, CvType.CV_8UC1);
 		mResult = new Mat();
 		
-		SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-		String configLocation = sharedPref.getString("pref_configFileLocation", "/sdcard/rossz.ini");
-		Init(width, height, configLocation);
+		init();
 		
 	}
 
@@ -242,12 +258,17 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 //		inputFrame.rgba().copyTo(mRgba);
 //      Core.putText(mRgba, "OpenCV+Android", new Point(10, inputFrame.rgba().rows() - 10), 3, 1, new Scalar(255, 0, 0, 255), 2);
-        
-        mRgba = inputFrame.rgba();
-        mGray = inputFrame.gray();
-        //FindCircles(mGray.getNativeObjAddr(), mRgba.getNativeObjAddr());
-        FastColor(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
-		return mResult;
+		
+		mRgba = inputFrame.rgba();
+		
+		switch(currentOperatingMode) {
+			case IDLE: return mRgba;
+			case POSITION_PER_REQUEST:
+				mGray = inputFrame.gray();
+				nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
+				return mResult;
+			default: return mRgba;
+		}
 	}
 
 	@Override
@@ -256,12 +277,26 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		return false;
 	}
 	
-	public native void FindFeatures(long matAddrGr, long matAddrRgba);
-	public native void FindCircles(long matAddrGr, long matAddrRgba);
+	private void changeOperatingMode(OperatingMode newMode)
+	{
+		if(newMode != currentOperatingMode) {
+			
+			// release data for current mode
+			release();
+			
+			// enter new mode
+			currentOperatingMode = newMode;
+			init();
+			Toast.makeText(MainActivity.this, "Changed operating mode to " + currentOperatingMode.name(), Toast.LENGTH_LONG).show();
+		}
+	}
 	
-	public native void Init(int width, int height, String configFileLocation);
-	public native void FastColor(long matAddrInput, long matAddrResult);
-	public native void Release();
+	public native void nativeFindFeatures(long matAddrGr, long matAddrRgba);
+	public native void nativeFindCircles(long matAddrGr, long matAddrRgba);
+	
+	public native void nativeInitTracker(int width, int height, String configFileLocation);
+	public native void nativeTrack(long matAddrInput, long matAddrResult);
+	public native void nativeReleaseTracker();
 	
 
 }

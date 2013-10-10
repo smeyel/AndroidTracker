@@ -6,23 +6,47 @@ import java.io.IOException;
 
 import org.opencv.android.JavaCameraView;
 
-
-
-
-
 //import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
+import android.hardware.Camera.ShutterCallback;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
+
+import com.ol.research.measurement.TimeMeasurement;
 //import android.view.Surface;
-import android.view.SurfaceHolder;
 
 public class CameraPreview extends JavaCameraView implements PictureCallback {
+	
 	private boolean saveToSD = false;
 	byte[] lastPhotoData;
+	
+	static long OnShutterEventTimestamp;
+	String current_time = null;
+	
+	Handler handler = null;
+
+	private ShutterCallback mShutter = new ShutterCallback()
+	{
+		@Override
+		public void onShutter()
+		{
+			OnShutterEventTimestamp = TimeMeasurement.getTimeStamp();
+			current_time = String.valueOf(OnShutterEventTimestamp); 
+			CommsThread.TM.Stop(CommsThread.TakePictureMsID);   
+			CommsThread.TM.Start(CommsThread.PostProcessJPEGMsID);
+			Message timeMessage = new Message();
+			timeMessage.what = MainActivity.TIME_ID;
+			if(handler != null) {
+				handler.sendMessage(timeMessage);
+			}
+		}
+	};
+	
 //	Camera mCamera;
 //	SurfaceHolder mHolder;
 
@@ -44,8 +68,17 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
         super(context, attrs);
     }
 	
-	public Camera getCamera(){
-		return mCamera;
+	public Handler getHandler() {
+		return handler;
+	}
+
+	public void setHandler(Handler handler) {
+		this.handler = handler;
+	}
+	
+	public void takePicture() {
+		mCamera.setPreviewCallback(null);
+		mCamera.takePicture(mShutter, null, this); //--------takePicture command
 	}
 
 	@Override
@@ -75,6 +108,7 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 			MainActivity.syncObj.notifyAll();
 		}
 		mCamera.startPreview();
+		mCamera.setPreviewCallback(this);
 	}
 	
 //	@Override

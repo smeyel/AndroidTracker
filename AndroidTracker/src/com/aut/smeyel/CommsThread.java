@@ -11,14 +11,12 @@ import java.net.Socket;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
-import android.hardware.Camera.ShutterCallback;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.ol.research.measurement.*;
+import com.ol.research.measurement.MeasurementLog;
+import com.ol.research.measurement.TimeMeasurement;
 
 /**
  * The thread of the communication. Contains time measurement points. <br>
@@ -39,8 +37,7 @@ class CommsThread implements Runnable {
 	ServerSocket ss;
 	static OutputStream socket_os;
 	static Socket s = null;
-	static boolean isPictureComplete;	// Used by SendImageService
-	ShutterCallback mShutter;	
+	static boolean isPictureComplete;	// Used by SendImageService	
     private static final String TAG = "COMM";
     long TakingPicture;
     
@@ -58,11 +55,10 @@ class CommsThread implements Runnable {
 	static int SendingJsonMsID = 9;
 	static int SendingJpegMsID = 10;
 	
-	public CommsThread(CameraPreview mOpenCvCameraView, Handler hand, ShutterCallback mShutter, ServerSocket ss)
+	public CommsThread(CameraPreview mOpenCvCameraView, Handler hand, ServerSocket ss)
 	{
 		this.mOpenCvCameraView = mOpenCvCameraView;
 		handler=hand;
-		this.mShutter = mShutter;
 		this.ss = ss;
 		TM.setMeasurementLog(TimeMeasurementResults);
 		TM.setName(ReceptionMsID, "ReceptionMs");
@@ -152,6 +148,7 @@ class CommsThread implements Runnable {
 	           		
 		    		actual_time = TimeMeasurement.getTimeStamp();
 		    		
+		    		// TODO: set operating mode in MainActivity accordingly
 	               	if (type.equals("takepicture"))// ----------- TAKE PICTURE command
 	               	{
 	                    Log.i(TAG, "Cmd: take picture...");
@@ -173,7 +170,7 @@ class CommsThread implements Runnable {
 	                    isPictureComplete = false;	// SendImageService will set this true...
 	                    TM.Stop(WaitingMsID);
 	                    TM.Start(TakePictureMsID);
-	                    mOpenCvCameraView.getCamera().takePicture(mShutter, null, mOpenCvCameraView); //--------takePicture command
+	                    mOpenCvCameraView.takePicture();
 	               		
 	                    Log.i(TAG, "Waiting for sync...");
 	                    while(!isPictureComplete)
@@ -198,7 +195,7 @@ class CommsThread implements Runnable {
 	            	        StringBuilder sb = new StringBuilder("{\"type\":\"JPEG\",\"size\":\""); 
 	            	        sb.append(buff);
 	            	        sb.append("\",\"timestamp\":\"");
-	            	        sb.append(Long.toString(MainActivity.OnShutterEventTimestamp));
+	            	        sb.append(Long.toString(CameraPreview.OnShutterEventTimestamp));
 	            	        sb.append("\"}#");
 	            	        String JSON_message = sb.toString();
 	            	        
@@ -242,7 +239,7 @@ class CommsThread implements Runnable {
 	               		out = s.getOutputStream();       
 	                    DataOutputStream output = new DataOutputStream(out);    
 	                    //double x = 0, y = 0;
-	                    TrackerData td = GetLastKnownPosition();
+	                    TrackerData td = nativeGetLastKnownPosition();
 	                    output.writeUTF("x: " + td.posx + " y: " + td.posy + " valid: " + td.valid + "#");
 	                    output.flush();
 	               	}
@@ -253,7 +250,7 @@ class CommsThread implements Runnable {
 	               	// Save timing info
 	               	double DelayTakePicture = TimeMeasurement.calculateIntervall(desired_timestamp, TakingPicture);
 	               	TM.pushIntervallToLog("TakePictureDelayMs", DelayTakePicture);
-	               	double DelayOnShutter = TimeMeasurement.calculateIntervall(desired_timestamp, MainActivity.OnShutterEventTimestamp);
+	               	double DelayOnShutter = TimeMeasurement.calculateIntervall(desired_timestamp, CameraPreview.OnShutterEventTimestamp);
 	               	TM.pushIntervallToLog("OnShutterDelayMs", DelayOnShutter);
 	            }
 	            ss.close(); 
@@ -275,6 +272,6 @@ class CommsThread implements Runnable {
 			} 
         }
     }      
-	public native TrackerData GetLastKnownPosition();
+	public native TrackerData nativeGetLastKnownPosition();
 }
 
