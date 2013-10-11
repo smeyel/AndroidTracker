@@ -112,8 +112,9 @@ class CommsThread implements Runnable {
 	            is = s.getInputStream();
 	            
 	            int ch=0;        
-	       
-	            while(true) //beak condition terminates the loop
+
+	            //	            while(true) //beak condition terminates the loop
+	            while(!Thread.currentThread().isInterrupted())
 	            {	
 	        		TM.Start(AllMsID);
 	        		TM.Start(ReceptionMsID);
@@ -255,6 +256,8 @@ class CommsThread implements Runnable {
 	            }
 	            ss.close(); 
 	            s.close();
+	            ss = null;
+	            s = null;
 			}
     	} catch (JSONException e) {
             Log.e("JSON Parser", "Error parsing data " + e.toString());
@@ -264,9 +267,15 @@ class CommsThread implements Runnable {
 			e.printStackTrace();
 		}
         finally{
-            try {
-				ss.close();
-				s.close();
+        	try {
+        		if(ss != null) {
+        			ss.close();
+        			ss = null;
+        		}
+        		if(s != null) {
+        			s.close();
+        			s = null;
+        		}
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			} 

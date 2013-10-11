@@ -159,9 +159,6 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         mOpenCvCameraView.setHandler(myUpdateHandler);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        
-        myCommsThread = new Thread(new CommsThread(mOpenCvCameraView, myUpdateHandler, ss));
-		myCommsThread.start();
 	}
 
 	@Override
@@ -222,6 +219,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_5, this, mLoaderCallback);
         //TODO: myCommsThread should be probably resumed or restarted here (also it should be properly paused/finished in onPause/onDestroy)
+        myCommsThread = new Thread(new CommsThread(mOpenCvCameraView, myUpdateHandler, ss));
+		myCommsThread.start();
     }
 
     @Override
