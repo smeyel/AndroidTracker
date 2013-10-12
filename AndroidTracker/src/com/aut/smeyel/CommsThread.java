@@ -32,6 +32,7 @@ import com.ol.research.measurement.TimeMeasurement;
  * */
 class CommsThread implements Runnable {
 	
+	private volatile boolean terminating = false;
 	private CameraPreview mOpenCvCameraView;
 	Handler handler;
 	ServerSocket ss;
@@ -97,7 +98,8 @@ class CommsThread implements Runnable {
         OutputStream out = null;
         try
         { 
-        	while (!Thread.currentThread().isInterrupted()) {	        
+//        	while (!Thread.currentThread().isInterrupted()) {	 
+        	while(!this.terminating) {
 		       
         		ss = null;
         		ss = new ServerSocket(MainActivity.SERVERPORT);
@@ -114,7 +116,7 @@ class CommsThread implements Runnable {
 	            int ch=0;        
 
 	            //	            while(true) //beak condition terminates the loop
-	            while(!Thread.currentThread().isInterrupted())
+	            while(!this.terminating)
 	            {	
 	        		TM.Start(AllMsID);
 	        		TM.Start(ReceptionMsID);
@@ -267,6 +269,7 @@ class CommsThread implements Runnable {
 			e.printStackTrace();
 		}
         finally{
+        	terminating = true;
         	try {
         		if(ss != null) {
         			ss.close();
@@ -281,6 +284,13 @@ class CommsThread implements Runnable {
 			} 
         }
     }      
+	public boolean isTerminating() {
+		return terminating;
+	}
+
+	public void setTerminating() {
+		this.terminating = true;
+	}
 	public native TrackerData nativeGetLastKnownPosition();
 }
 

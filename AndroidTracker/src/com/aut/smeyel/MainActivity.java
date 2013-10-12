@@ -78,7 +78,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	static String mClientMsg = "";
 	static Object syncObj = new Object();
 	
-	Thread myCommsThread = null;
+	CommsThread myCommThread = null;
+	Thread myThread = null;
 
 //	CameraPreview mPreview;
 //	Camera mCamera;
@@ -210,7 +211,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
 		release();
-		myCommsThread.interrupt();
+		//		myThread.interrupt();
+		myCommThread.setTerminating();
     }
 
     @Override
@@ -219,8 +221,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_5, this, mLoaderCallback);
         //TODO: myCommsThread should be probably resumed or restarted here (also it should be properly paused/finished in onPause/onDestroy)
-        myCommsThread = new Thread(new CommsThread(mOpenCvCameraView, myUpdateHandler, ss));
-		myCommsThread.start();
+        restartThread();
     }
 
     @Override
@@ -229,7 +230,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
         release();
-        myCommsThread.interrupt();
+        //        myThread.interrupt();
+        myCommThread.setTerminating();
     }
 
 	@Override
@@ -255,6 +257,12 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+		// keeping connection alive
+		if(myThread == null || myCommThread == null || myCommThread.isTerminating()) {
+			restartThread();
+		}
+		
+		
 //		inputFrame.rgba().copyTo(mRgba);
 //      Core.putText(mRgba, "OpenCV+Android", new Point(10, inputFrame.rgba().rows() - 10), 3, 1, new Scalar(255, 0, 0, 255), 2);
 		
@@ -288,6 +296,19 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 			init();
 			Toast.makeText(MainActivity.this, "Changed operating mode to " + currentOperatingMode.name(), Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	private void restartThread(){
+		if(myThread != null) {
+			myThread.interrupt();
+		}
+		if(myCommThread != null && !myCommThread.isTerminating()) {
+			myCommThread.setTerminating();
+		}
+		
+		myCommThread = new CommsThread(mOpenCvCameraView, myUpdateHandler, ss);
+        myThread = new Thread(myCommThread);
+		myThread.start();
 	}
 	
 	public native void nativeFindFeatures(long matAddrGr, long matAddrRgba);
