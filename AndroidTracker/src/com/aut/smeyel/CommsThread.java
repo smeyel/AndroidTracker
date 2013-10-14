@@ -99,10 +99,13 @@ class CommsThread implements Runnable {
         try
         { 
 //        	while (!Thread.currentThread().isInterrupted()) {	 
-        	while(!this.terminating) {
+        	while(!terminating) {
 		       
         		ss = null;
         		ss = new ServerSocket(MainActivity.SERVERPORT);
+//        		ss = new ServerSocket();
+//        		ss.setReuseAddress(true);
+//        		ss.bind(new InetSocketAddress(MainActivity.SERVERPORT));
 		        s = null;	    	
 		        is = null;
 		        out = null;       
@@ -116,7 +119,7 @@ class CommsThread implements Runnable {
 	            int ch=0;        
 
 	            //	            while(true) //beak condition terminates the loop
-	            while(!this.terminating)
+	            while(!terminating)
 	            {	
 	        		TM.Start(AllMsID);
 	        		TM.Start(ReceptionMsID);
@@ -155,6 +158,11 @@ class CommsThread implements Runnable {
 	               	if (type.equals("takepicture"))// ----------- TAKE PICTURE command
 	               	{
 	                    Log.i(TAG, "Cmd: take picture...");
+	                    
+	                    Message takePictureMessage = new Message(); //TODO: message.obtain
+	                    takePictureMessage.what = MainActivity.PHOTO_MODE_ID;
+	                	handler.sendMessage(takePictureMessage);
+	                	
 	                    Log.i(TAG, "Waiting for desired timestamp...");
 	                    TM.Stop(PreProcessMsID);
 	                    TM.Start(WaitingMsID);
@@ -239,6 +247,11 @@ class CommsThread implements Runnable {
 	               	} else if(type.equals("requestposition"))
 	               	{
 	               		Log.i(TAG, "Cmd: send position");
+	               		
+	               		Message sendPositionMessage = new Message(); //TODO: message.obtain
+	               		sendPositionMessage.what = MainActivity.POSITION_MODE_ID;
+	                	handler.sendMessage(sendPositionMessage);
+	                	
 	               		out = s.getOutputStream();       
 	                    DataOutputStream output = new DataOutputStream(out);    
 	                    //double x = 0, y = 0;
