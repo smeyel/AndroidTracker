@@ -1,5 +1,6 @@
 package com.aut.smeyel;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.ServerSocket;
 
@@ -79,7 +80,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	protected static final int PHOTO_MODE_ID = 0x1340;
 	protected static final int POSITION_MODE_ID = 0x1341;
 	//	private static final String  TAG = "TMEAS";
-	ServerSocket ss = null;
+	volatile ServerSocket ss = null;
 	static String mClientMsg = "";
 	static Object syncObj = new Object();
 	
@@ -207,7 +208,31 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
             mOpenCvCameraView.disableView();
 		release();
 		//		myThread.interrupt();
-		myCommThread.setTerminating();
+		
+		if(myCommThread != null && !myCommThread.isTerminating()) {
+			myCommThread.setTerminating();
+		}
+		
+		// we should wait a bit here for thread to finish
+		if(myThread != null) {
+			try {
+				myThread.join(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			myThread.interrupt();
+		}
+		
+		
+		if(ss != null) {
+			try {
+				ss.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
     }
 
     @Override
@@ -216,6 +241,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_5, this, mLoaderCallback);
         //TODO: myCommsThread should be probably resumed or restarted here (also it should be properly paused/finished in onPause/onDestroy)
+        init();
         restartThread();
     }
 
@@ -224,9 +250,33 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-        release();
-        //        myThread.interrupt();
-        myCommThread.setTerminating();
+		release();
+		//		myThread.interrupt();
+		
+		if(myCommThread != null && !myCommThread.isTerminating()) {
+			myCommThread.setTerminating();
+		}
+		
+		// we should wait a bit here for thread to finish
+		if(myThread != null) {
+			try {
+				myThread.join(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			myThread.interrupt();
+		}
+		
+		
+		if(ss != null) {
+			try {
+				ss.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
     }
 
 	@Override
@@ -293,6 +343,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 			currentOperatingMode = newMode;
 			init();
 			Toast.makeText(MainActivity.this, "Changed operating mode to " + currentOperatingMode.name(), Toast.LENGTH_LONG).show();
+			Log.d(TAG, "Changed operating mode to " + currentOperatingMode.name());
 		}
 	}
 	
@@ -304,10 +355,18 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 			myThread.interrupt();
 		}
 		
+		try {
+			ss = new ServerSocket();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		myCommThread = new CommsThread(mOpenCvCameraView, myUpdateHandler, ss);
         myThread = new Thread(myCommThread);
 		myThread.start();
 		Toast.makeText(MainActivity.this, "Thread restarted.", Toast.LENGTH_SHORT).show();
+		Log.d(TAG, "Thread restarted.");
 		
 		changeOperatingMode(OperatingMode.IDLE);
 	}

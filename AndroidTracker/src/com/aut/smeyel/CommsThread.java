@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -101,11 +102,8 @@ class CommsThread implements Runnable {
 //        	while (!Thread.currentThread().isInterrupted()) {	 
         	while(!terminating) {
 		       
-        		ss = null;
-        		ss = new ServerSocket(MainActivity.SERVERPORT);
-//        		ss = new ServerSocket();
-//        		ss.setReuseAddress(true);
-//        		ss.bind(new InetSocketAddress(MainActivity.SERVERPORT));
+        		ss.setReuseAddress(true);
+        		ss.bind(new InetSocketAddress(MainActivity.SERVERPORT));
 		        s = null;	    	
 		        is = null;
 		        out = null;       
@@ -271,8 +269,6 @@ class CommsThread implements Runnable {
 	            }
 	            ss.close(); 
 	            s.close();
-	            ss = null;
-	            s = null;
 			}
     	} catch (JSONException e) {
             Log.e("JSON Parser", "Error parsing data " + e.toString());
@@ -296,6 +292,7 @@ class CommsThread implements Runnable {
 				e1.printStackTrace();
 			} 
         }
+        Log.d(TAG, "Exiting CommThread");
     }      
 	public boolean isTerminating() {
 		return terminating;
