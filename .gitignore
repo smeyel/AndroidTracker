@@ -29,3 +29,4 @@ Release/
 *.suo
 *.xlsx
 *.csv
+gen/

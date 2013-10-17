@@ -22,7 +22,7 @@ public class TimeMeasurement {
 	//FIXME is OpenCV loaded => maybe init() funcition
 	
 	/**Must be set on true, when OpenCV is initialized.*/
-	public static boolean isOpenCVLoaded =false;
+	public static volatile boolean isOpenCVLoaded = false;
 	double TickFrequency;
 	private static final int MAX_TIMING_INDEX = 1000;
 	long[] StartTickValues;

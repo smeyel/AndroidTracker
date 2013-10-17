@@ -123,8 +123,7 @@ class CommsThread implements Runnable {
 	        		TM.Start(ReceptionMsID);
 	        		
 	        		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		        	Message receivedMessage = new Message(); //TODO: message.obtain
-		        	receivedMessage.what = MainActivity.MSG_ID;
+		        	Message receivedMessage = handler.obtainMessage(MainActivity.MSG_ID);
 	                do {
 	                	ch=is.read();
 	                	if(ch != '#' && ch != -1) //TODO: change to '\0'
@@ -157,9 +156,8 @@ class CommsThread implements Runnable {
 	               	{
 	                    Log.i(TAG, "Cmd: take picture...");
 	                    
-	                    Message takePictureMessage = new Message(); //TODO: message.obtain
-	                    takePictureMessage.what = MainActivity.PHOTO_MODE_ID;
-	                	handler.sendMessage(takePictureMessage);
+	                    Message pictureModeMessage = handler.obtainMessage(MainActivity.CHANGE_OPERATING_MODE_ID, MainActivity.OperatingMode.PICTURE_PER_REQUEST.ordinal(), 0);
+	                    pictureModeMessage.sendToTarget();
 	                	
 	                    Log.i(TAG, "Waiting for desired timestamp...");
 	                    TM.Stop(PreProcessMsID);
@@ -246,9 +244,8 @@ class CommsThread implements Runnable {
 	               	{
 	               		Log.i(TAG, "Cmd: send position");
 	               		
-	               		Message sendPositionMessage = new Message(); //TODO: message.obtain
-	               		sendPositionMessage.what = MainActivity.POSITION_MODE_ID;
-	                	handler.sendMessage(sendPositionMessage);
+	               		Message positionModeMessage = handler.obtainMessage(MainActivity.CHANGE_OPERATING_MODE_ID, MainActivity.OperatingMode.POSITION_PER_REQUEST.ordinal(), 0);
+	               		positionModeMessage.sendToTarget();
 	                	
 	               		out = s.getOutputStream();       
 	                    DataOutputStream output = new DataOutputStream(out);    
@@ -260,7 +257,7 @@ class CommsThread implements Runnable {
 	               	              	
 	               	MainActivity.mClientMsg = message;
 	                Log.i(TAG, "Sending response...");
-	               	handler.sendMessage(receivedMessage);
+	                receivedMessage.sendToTarget();
 	               	// Save timing info
 	               	double DelayTakePicture = TimeMeasurement.calculateIntervall(desired_timestamp, TakingPicture);
 	               	TM.pushIntervallToLog("TakePictureDelayMs", DelayTakePicture);

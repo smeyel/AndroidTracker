@@ -2,8 +2,15 @@ package com.aut.smeyel;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
+import java.net.SocketException;
+import java.util.Enumeration;
 
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.util.InetAddressUtils;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
@@ -15,6 +22,7 @@ import org.opencv.core.Mat;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.http.AndroidHttpClient;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -57,7 +65,7 @@ import com.ol.research.measurement.TimeMeasurement;
 
 public class MainActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener {
 	
-	private enum OperatingMode {
+	public static enum OperatingMode {
 		IDLE, POSITION_PER_REQUEST, PICTURE_PER_REQUEST, POSITION_STREAM, PICTURE_STREAM
 	}
 	/** should only be modified with changeOperatingMode(OperatingMode newMode) method **/
@@ -77,8 +85,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	protected static final int SERVERPORT = 6000;
 	protected static final int TIME_ID = 0x1338;
 	protected static final int RESTART_SERVICE_ID = 0x1339;
-	protected static final int PHOTO_MODE_ID = 0x1340;
-	protected static final int POSITION_MODE_ID = 0x1341;
+	protected static final int CHANGE_OPERATING_MODE_ID = 0x1340;
 	//	private static final String  TAG = "TMEAS";
 	volatile ServerSocket ss = null;
 	static String mClientMsg = "";
@@ -302,11 +309,14 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 
 	@Override
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+		// this is a callback method that looks like doesn't run on UI thread
+		// so there's probably no need to run (native) processing operations in separate thread
+		// (unless we want more continuous unprocessed preview pictures)
+		
 		// keeping connection alive
 		if(myThread == null || myCommThread == null || myCommThread.isTerminating()) {
-			Message restartMessage = new Message(); //TODO: message.obtain
-        	restartMessage.what = MainActivity.RESTART_SERVICE_ID;
-        	myUpdateHandler.sendMessage(restartMessage);
+			Message restartMessage = myUpdateHandler.obtainMessage(MainActivity.RESTART_SERVICE_ID);
+			restartMessage.sendToTarget();
 //			restartThread();
 		}
 		
@@ -317,12 +327,14 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		mRgba = inputFrame.rgba();
 		
 		switch(currentOperatingMode) {
-			case IDLE: return mRgba;
+			case IDLE:
+				return mRgba;
 			case POSITION_PER_REQUEST:
 				mGray = inputFrame.gray();
 				nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
 				return mResult;
-			default: return mRgba;
+			default:
+				return mRgba;
 		}
 	}
 
@@ -378,22 +390,72 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	//				TextView tv = (TextView) findViewById(R.id.TextView_receivedme);
 	//				tv.setText(mClientMsg);
 				break;
+				
 			case TIME_ID:
 	//				TextView tv2 = (TextView) findViewById(R.id.TextView_timegot);
 	//				tv2.setText(current_time);
 				break;
+				
 			case RESTART_SERVICE_ID:
 				restartThread();
 				break;
-			case PHOTO_MODE_ID:
-				changeOperatingMode(OperatingMode.PICTURE_PER_REQUEST);
+				
+			case CHANGE_OPERATING_MODE_ID:
+				if(msg.arg1 == OperatingMode.PICTURE_PER_REQUEST.ordinal()) {
+					changeOperatingMode(OperatingMode.PICTURE_PER_REQUEST);
+				} else if(msg.arg1 == OperatingMode.POSITION_PER_REQUEST.ordinal()) {
+					changeOperatingMode(OperatingMode.POSITION_PER_REQUEST);
+				} else {
+					Log.e(TAG,"Invalid operating mode requested.");
+				}
 				break;
-			case POSITION_MODE_ID:
-				changeOperatingMode(OperatingMode.POSITION_PER_REQUEST);
-				break;
+				
 			default:
 //				super.handleMessage(msg);
 				break;
+				
+		}
+	}
+	
+	private String getLocalIpAddress() {
+		try {
+			for (Enumeration en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+				NetworkInterface intf = (NetworkInterface) en.nextElement();
+				for (Enumeration enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+					InetAddress inetAddress = (InetAddress) enumIpAddr.nextElement();
+					if (!inetAddress.isLoopbackAddress() && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress())) {
+						// temporary (?) solution to use only ipv4 address
+						return inetAddress.getHostAddress().toString();
+					}
+				}
+			}
+		} catch (SocketException ex) {
+			//Log.e(LOG_TAG, ex.toString());
+		}
+		return null;
+	} 
+	
+	private void httpReg()
+	{
+		AndroidHttpClient httpClient = null;
+		String IpAddress = new String(getLocalIpAddress());
+		try{
+			httpClient = AndroidHttpClient.newInstance("Android");
+			HttpGet httpGet = new HttpGet("http://avalon.aut.bme.hu/~kristof/smeyel/smeyel_reg.php?IP="+IpAddress);
+			final String response = httpClient.execute(httpGet, new BasicResponseHandler());
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run()
+				{
+					Toast.makeText(MainActivity.this, response, Toast.LENGTH_LONG).show();
+				}
+			});
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		} finally{
+			if (httpClient != null)
+				httpClient.close();
 		}
 	}
 	

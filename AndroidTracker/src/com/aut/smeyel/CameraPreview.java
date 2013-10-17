@@ -3,14 +3,18 @@ package com.aut.smeyel;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import org.opencv.android.JavaCameraView;
+
+
 
 //import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
+import android.hardware.Camera.Size;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -21,6 +25,8 @@ import com.ol.research.measurement.TimeMeasurement;
 //import android.view.Surface;
 
 public class CameraPreview extends JavaCameraView implements PictureCallback {
+
+	private static final String TAG = "SMEyeL::AndroidTracker::CameraPreview";
 	
 	private boolean saveToSD = false;
 	byte[] lastPhotoData;
@@ -39,13 +45,37 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 			current_time = String.valueOf(OnShutterEventTimestamp); 
 			CommsThread.TM.Stop(CommsThread.TakePictureMsID);   
 			CommsThread.TM.Start(CommsThread.PostProcessJPEGMsID);
-			Message timeMessage = new Message();
-			timeMessage.what = MainActivity.TIME_ID;
 			if(handler != null) {
-				handler.sendMessage(timeMessage);
+				Message timeMessage = handler.obtainMessage(MainActivity.TIME_ID);
+				timeMessage.sendToTarget();
 			}
 		}
 	};
+	
+//	@Override
+//	protected boolean initializeCamera(int width, int height) {
+//		boolean retValue = super.initializeCamera(width, height);
+//
+//		try {
+//			mCamera.setPreviewCallback(null);
+//			mCamera.stopPreview();
+//			
+//			Camera.Parameters parameters = mCamera.getParameters();
+//			parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+//			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+//			parameters.setAntibanding(Camera.Parameters.ANTIBANDING_AUTO);
+//
+//			
+//			mCamera.startPreview();
+//			mCamera.setPreviewCallback(this);
+//		} catch (Exception e) {
+//			Log.d("AutoCamera",
+//					"Error setting camera preview: " + e.getMessage());
+//		}
+//
+//		
+//		return retValue;
+//	}
 	
 //	Camera mCamera;
 //	SurfaceHolder mHolder;
@@ -76,7 +106,23 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 		this.handler = handler;
 	}
 	
+	public List<Size> getResolutionList() {
+        return mCamera.getParameters().getSupportedPreviewSizes();
+    }
+
+    public void setResolution(Size resolution) {
+        disconnectCamera();
+        mMaxHeight = resolution.height;
+        mMaxWidth = resolution.width;
+        connectCamera(getWidth(), getHeight());
+    }
+
+    public Size getResolution() {
+        return mCamera.getParameters().getPreviewSize();
+    }
+	
 	public void takePicture() {
+		Log.d(TAG, "Taking picture");
 		mCamera.setPreviewCallback(null);
 		mCamera.takePicture(mShutter, null, this); //--------takePicture command
 	}
@@ -84,7 +130,12 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 	@Override
 	public void onPictureTaken(byte[] data, Camera camera) {
 		CommsThread.TM.Stop(CommsThread.PostProcessJPEGMsID);
+		
+		mCamera.startPreview();
+		mCamera.setPreviewCallback(this);
+		
 		CommsThread.TM.Start(CommsThread.PostProcessPostJpegMsID);
+		Log.d(TAG, "Processing picture");
 		//Option to save the picture to SD card
 		if(saveToSD)
 		{
@@ -95,11 +146,11 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 				fos.close();   
 
 			} catch (FileNotFoundException e) {
-				Log.d("Photographer", "File not found: " + e.getMessage());
+				Log.d(TAG, "File not found: " + e.getMessage());
 			} catch (IOException e) {
-				Log.d("Photographer", "Error accessing file: " + e.getMessage());
+				Log.d(TAG, "Error accessing file: " + e.getMessage());
 			}
-			Log.v("Photographer", "Picture saved at path: " + pictureFile);
+			Log.v(TAG, "Picture saved at path: " + pictureFile);
 		}
 		lastPhotoData = data;
 		synchronized (MainActivity.syncObj) //notifys the Commsthread, if the picture is complete
@@ -107,8 +158,6 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 			CommsThread.isPictureComplete = true;
 			MainActivity.syncObj.notifyAll();
 		}
-		mCamera.startPreview();
-		mCamera.setPreviewCallback(this);
 	}
 	
 //	@Override
