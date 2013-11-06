@@ -308,7 +308,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 				return mRgba;
 			case POSITION_PER_REQUEST:
 				mGray = inputFrame.gray();
-				nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
+				TrackerData[] trackerData = nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
+				// TODO: send trackerData via CommThread
 				return mResult;
 			default:
 				return mRgba;
@@ -318,6 +319,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		// TODO Auto-generated method stub
+//		changeOperatingMode(OperatingMode.POSITION_PER_REQUEST);
 		return false;
 	}
 	
@@ -444,7 +446,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	public native void nativeFindCircles(long matAddrGr, long matAddrRgba);
 	
 	public native void nativeInitTracker(int width, int height, String configFileLocation);
-	public native void nativeTrack(long matAddrInput, long matAddrResult);
+	public native TrackerData[] nativeTrack(long matAddrInput, long matAddrResult);
 	public native void nativeReleaseTracker();
 	
 

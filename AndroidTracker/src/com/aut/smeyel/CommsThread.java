@@ -250,8 +250,9 @@ class CommsThread implements Runnable {
 	               		out = s.getOutputStream();       
 	                    DataOutputStream output = new DataOutputStream(out);    
 	                    //double x = 0, y = 0;
-	                    TrackerData td = nativeGetLastKnownPosition();
-	                    output.writeUTF("x: " + td.posx + " y: " + td.posy + " valid: " + td.valid + "#");
+	                    // TODO: send TrackerDatas if available - in a while loop maybe
+//	                    TrackerData[] td = nativeGetLastKnownPosition();
+//	                    output.writeUTF("x: " + td.posx + " y: " + td.posy + " valid: " + td.valid + "#");
 	                    output.flush();
 	               	}
 	               	              	
@@ -298,6 +299,6 @@ class CommsThread implements Runnable {
 	public void setTerminating() {
 		this.terminating = true;
 	}
-	public native TrackerData nativeGetLastKnownPosition();
+	public native TrackerData[] nativeGetLastKnownPosition();
 }
 

@@ -6,6 +6,7 @@
 
 #include "FastColorFilter.h"
 #include "MarkerCC2Tracker.h"
+#include "MarkerCC2.h"
 #include "DetectionResultExporterBase.h"
 #include "TimeMeasurementCodeDefines.h"
 #include "SimpleIniConfigReader.h"
@@ -34,9 +35,11 @@ const char* intToCharStar(int i) {
 	return stringToCharStar(intToString(i));
 }
 
-double lastKnownX = 0.0;
-double lastKnownY = 0.0;
-bool lastKnownValid = false;
+//double lastKnownX = 0.0;
+//double lastKnownY = 0.0;
+//bool lastKnownValid = false;
+
+vector<MarkerCC2> foundMarkers;
 
 class ResultExporter : public TwoColorCircleMarker::DetectionResultExporterBase
 {
@@ -63,12 +66,22 @@ public:
 //		LOGD("aaaaaamarkerfound");
 //		stream << endl;
 
-		lastKnownX =  marker->center.x;
-		lastKnownY =  marker->center.y;
-		lastKnownValid = marker->isCenterValid;
+//		lastKnownX =  marker->center.x;
+//		lastKnownY =  marker->center.y;
+//		lastKnownValid = marker->isCenterValid;
+//
+//		int valid = lastKnownValid ? 1 : 0;
 
-		int valid = lastKnownValid ? 1 : 0;
-		Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Position: %f %f Valid: %d\n", lastKnownX, lastKnownY, valid);
+		MarkerCC2* markerCc2 = (MarkerCC2*) marker;
+		if(markerCc2 != NULL) {
+			foundMarkers.push_back(*markerCc2);
+//			if(markerCc2->isValid) {
+//				int markerId = markerCc2->MarkerID;
+//				Logger::getInstance()->Log(Logger::LOGLEVEL_ERROR, LOG_TAG, "aaaaaaa: %d", markerId);
+//			}
+		}
+
+//		Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Position: %f %f Valid: %d\n", lastKnownX, lastKnownY, valid);
 	}
 };
 
@@ -207,10 +220,13 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeInitTracker(JNIEnv
 
 }
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv*, jobject, jlong addrInput, jlong addrResult);
+JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult);
 
-JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv*, jobject, jlong addrInput, jlong addrResult)
+JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult)
 {
+	// TODO: timestamp
+	foundMarkers.clear();
+
 	Mat& mInput  = *(Mat*)addrInput;
 	Mat& mResult = *(Mat*)addrResult;
 
@@ -230,6 +246,28 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv*, job
 //	Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "LocateMarkers: %f ms", tracker->timeMeasurement->getavgms(TimeMeasurementCodeDefs::LocateMarkers));
 //	Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "---------------------");
 
+	jclass trackerDataClass = env->FindClass("com/aut/smeyel/TrackerData");
+	jobjectArray trackerDataArray = env->NewObjectArray(foundMarkers.size(), trackerDataClass, 0);
+
+	for(int i = 0; i < foundMarkers.size(); i++) {
+		jmethodID cid = env->GetMethodID(trackerDataClass,"<init>","()V");
+		jobject obj = env->NewObject(trackerDataClass, cid);
+
+		jfieldID fid_x = env->GetFieldID(trackerDataClass , "posx", "D");
+		env->SetDoubleField(obj, fid_x, foundMarkers[i].center.x);
+
+		jfieldID fid_y = env->GetFieldID(trackerDataClass , "posy", "D");
+		env->SetDoubleField(obj, fid_y, foundMarkers[i].center.y);
+
+		jfieldID fid_b = env->GetFieldID(trackerDataClass , "valid", "Z");
+		env->SetBooleanField(obj, fid_b, foundMarkers[i].isCenterValid);
+
+		env->SetObjectArrayElement(trackerDataArray, i, obj);
+
+	}
+
+	return trackerDataArray;
+
 }
 
 JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeReleaseTracker(JNIEnv*, jobject);
@@ -248,26 +286,13 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeReleaseTracker(JNI
 
 }
 
-// pulling data, a method with push would be good
-JNIEXPORT jobject JNICALL Java_com_aut_smeyel_CommsThread_nativeGetLastKnownPosition(JNIEnv* env, jobject thisObj);
-
-JNIEXPORT jobject JNICALL Java_com_aut_smeyel_CommsThread_nativeGetLastKnownPosition(JNIEnv* env, jobject thisObj)
-{
-	jclass trackerData = env->FindClass("com/aut/smeyel/TrackerData");
-	jmethodID cid = env->GetMethodID(trackerData,"<init>","()V");
-	jobject out = env->NewObject(trackerData, cid);
-
-	jfieldID fid_x = env->GetFieldID(trackerData , "posx", "D");
-	env->SetDoubleField(out, fid_x, lastKnownX);
-
-	jfieldID fid_y = env->GetFieldID(trackerData , "posy", "D");
-	env->SetDoubleField(out, fid_y, lastKnownY);
-
-	jfieldID fid_b = env->GetFieldID(trackerData , "valid", "Z");
-	env->SetBooleanField(out, fid_b, lastKnownValid);
-
-	return out;
-
-
-}
+//// pulling data, a method with push would be good
+//JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_CommsThread_nativeGetLastKnownPosition(JNIEnv* env, jobject thisObj);
+//
+//JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_CommsThread_nativeGetLastKnownPosition(JNIEnv* env, jobject thisObj)
+//{
+//
+//
+//
+//}
 }
