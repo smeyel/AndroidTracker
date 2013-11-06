@@ -52,6 +52,12 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 		}
 	};
 	
+	@Override
+	public void onPreviewFrame(byte[] frame, Camera arg1) {
+		// TODO might be a good place to get timestamp though onShutter() is probably more accurate - but only available for takePicture()
+		super.onPreviewFrame(frame, arg1);
+	}
+	
 //	@Override
 //	protected boolean initializeCamera(int width, int height) {
 //		boolean retValue = super.initializeCamera(width, height);

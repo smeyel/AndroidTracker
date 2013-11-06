@@ -213,7 +213,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		super.onPause();
 		if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
-		release();
+		if(TimeMeasurement.isOpenCVLoaded) {
+			release();
+		}
 		//		myThread.interrupt();
 		
 		if(myCommThread != null && !myCommThread.isTerminating()) {
@@ -245,46 +247,19 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
     @Override
     public void onResume()
     {
-        super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_5, this, mLoaderCallback);
-        //TODO: myCommsThread should be probably resumed or restarted here (also it should be properly paused/finished in onPause/onDestroy)
-        init();
-        restartThread();
+    	super.onResume();
+    	OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_5, this, mLoaderCallback);
+    	//      init(); // not needed here, only when camera starts
+    	// myCommsThread is restarted here (also it should be properly paused/finished in onPause/onDestroy)
+    	restartThread();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-		release();
-		//		myThread.interrupt();
-		
-		if(myCommThread != null && !myCommThread.isTerminating()) {
-			myCommThread.setTerminating();
-		}
-		
-		// we should wait a bit here for thread to finish
-		if(myThread != null) {
-			try {
-				myThread.join(500);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			myThread.interrupt();
-		}
-		
-		
-		if(ss != null) {
-			try {
-				ss.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-    }
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        if (mOpenCvCameraView != null)
+//            mOpenCvCameraView.disableView();
+//    }
 
 	@Override
 	public void onCameraViewStarted(int _width, int _height) {
@@ -304,6 +279,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		mRgba.release();
 		mGray.release();
 		mResult.release();
+		
+		release();
 		
 	}
 
@@ -346,6 +323,10 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	
 	private synchronized void changeOperatingMode(OperatingMode newMode)
 	{
+		if(!TimeMeasurement.isOpenCVLoaded) {
+			Log.e(TAG, "Operating mode cannot be changed until native module is loaded.");
+			return;
+		}
 		if(newMode != currentOperatingMode) {
 			
 			// release data for current mode
