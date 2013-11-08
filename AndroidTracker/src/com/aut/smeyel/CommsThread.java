@@ -151,7 +151,6 @@ class CommsThread implements Runnable {
 	           		
 		    		actual_time = TimeMeasurement.getTimeStamp();
 		    		
-		    		// TODO: set operating mode in MainActivity accordingly
 	               	if (type.equals("takepicture"))// ----------- TAKE PICTURE command
 	               	{
 	                    Log.i(TAG, "Cmd: take picture...");
@@ -299,6 +298,6 @@ class CommsThread implements Runnable {
 	public void setTerminating() {
 		this.terminating = true;
 	}
-	public native TrackerData[] nativeGetLastKnownPosition();
+//	public native TrackerData[] nativeGetLastKnownPosition();
 }
 

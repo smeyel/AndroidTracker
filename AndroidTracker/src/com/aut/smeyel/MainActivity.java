@@ -89,7 +89,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	//	private static final String  TAG = "TMEAS";
 	volatile ServerSocket ss = null;
 	static String mClientMsg = "";
-	static Object syncObj = new Object();
+	static final Object syncObj = new Object();
 	
 	CommsThread myCommThread = null;
 	Thread myThread = null;

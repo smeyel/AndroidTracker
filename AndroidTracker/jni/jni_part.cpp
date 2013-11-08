@@ -224,7 +224,6 @@ JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIE
 
 JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult)
 {
-	// TODO: timestamp
 	foundMarkers.clear();
 
 	Mat& mInput  = *(Mat*)addrInput;

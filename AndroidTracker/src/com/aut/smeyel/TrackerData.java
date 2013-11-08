@@ -6,6 +6,6 @@ public class TrackerData {
 	public double posy;
 	
 	public boolean valid;
-	// TODO: markerid, timestamp, size, etc.
+	// TODO: int markerid, long timestamp, sizex-sizey, etc.
 
 }

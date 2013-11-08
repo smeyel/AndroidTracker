@@ -32,6 +32,7 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 	byte[] lastPhotoData;
 	
 	static long OnShutterEventTimestamp;
+	static long OnPreviewTimestamp;
 	String current_time = null;
 	
 	Handler handler = null;
@@ -55,6 +56,7 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 	@Override
 	public void onPreviewFrame(byte[] frame, Camera arg1) {
 		// TODO might be a good place to get timestamp though onShutter() is probably more accurate - but only available for takePicture()
+		OnPreviewTimestamp = TimeMeasurement.getTimeStamp();
 		super.onPreviewFrame(frame, arg1);
 	}
 	
