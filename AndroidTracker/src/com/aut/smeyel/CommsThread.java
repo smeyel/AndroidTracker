@@ -39,7 +39,7 @@ class CommsThread implements Runnable {
 	ServerSocket ss;
 	static OutputStream socket_os;
 	static Socket s = null;
-	static boolean isPictureComplete;	// Used by SendImageService	
+	static volatile boolean isPictureComplete;	// Used by SendImageService	
     private static final String TAG = "COMM";
     long TakingPicture;
     
@@ -179,15 +179,17 @@ class CommsThread implements Runnable {
 	                    mOpenCvCameraView.takePicture();
 	               		
 	                    Log.i(TAG, "Waiting for sync...");
-	                    while(!isPictureComplete)
+	                    synchronized (MainActivity.syncObj)
 	                    {
-		               		synchronized (MainActivity.syncObj)
-		               		{
-		               			// Wait() may also be interrupted,
-		               			// does not necessarily mean that send is complete.
-		               			MainActivity.syncObj.wait();
-		               		}
-		               		Log.i(TAG,"Wait() finished");
+	                    	while(!isPictureComplete)
+	                    	{
+
+	                    		// Wait() may also be interrupted,
+	                    		// does not necessarily mean that send is complete.
+	                    		MainActivity.syncObj.wait();
+
+	                    		Log.i(TAG,"Wait() finished");
+	                    	}
 	                    }
 	                    Log.i(TAG, "Sync received, sending picture...");
 	                    
@@ -245,14 +247,38 @@ class CommsThread implements Runnable {
 	               		
 	               		Message positionModeMessage = handler.obtainMessage(MainActivity.CHANGE_OPERATING_MODE_ID, MainActivity.OperatingMode.POSITION_PER_REQUEST.ordinal(), 0);
 	               		positionModeMessage.sendToTarget();
-	                	
-	               		out = s.getOutputStream();       
-	                    DataOutputStream output = new DataOutputStream(out);    
-	                    //double x = 0, y = 0;
-	                    // TODO: send TrackerDatas if available - in a while loop maybe
-//	                    TrackerData[] td = nativeGetLastKnownPosition();
-//	                    output.writeUTF("x: " + td.posx + " y: " + td.posy + " valid: " + td.valid + "#");
-	                    output.flush();
+	               		
+	                    synchronized (MainActivity.syncObj)
+	                    {
+	                    	while(MainActivity.trackerDatas == null)
+	                    	{
+	                    		MainActivity.syncObj.wait();
+	                    	}
+	                    	
+	                    	StringBuilder sb = new StringBuilder("{\"type\":\"JPEG\",\"size\":\""); 
+	            	        sb.append("\",\"timestamp\":\"");
+	            	        sb.append(Long.toString(CameraPreview.OnShutterEventTimestamp));
+	            	        
+	            	        // TODO: write timestamp
+		                    for(TrackerData td : MainActivity.trackerDatas) {
+		                    	sb.append("x: " + td.posx + " y: " + td.posy + " valid: " + td.valid + ","); // TODO: separating symbol, etc?
+		                    }
+		                    
+	            	        sb.append("\"}#");
+	            	        String JSON_message = sb.toString();
+		                	
+		               		out = s.getOutputStream();       
+		                    DataOutputStream output = new DataOutputStream(out);
+		                    output.writeUTF(JSON_message);
+	            	        output.flush();
+		                    
+		                    //double x = 0, y = 0;
+		                    // TODO: send TrackerDatas if available - in a while loop maybe
+	            	        
+	                    	MainActivity.trackerDatas = null;
+	                    }
+	                    
+	                    
 	               	}
 	               	              	
 	               	MainActivity.mClientMsg = message;

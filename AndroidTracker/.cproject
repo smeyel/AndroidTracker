@@ -31,9 +31,9 @@
 									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/cxx-stl/gnu-libstdc++/4.6/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi-v7a/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../../android-opencv/sdk/native/jni/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;E:\workspace\gitproject\M3\Framework\libLogConfigTime\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;E:\workspace\gitproject\M3\Framework\libLogConfigTimeAndroid\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;E:\workspace\gitproject\M3\ImageProcessing\libTwoColorCircleMarker\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../Framework/libLogConfigTime/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../Framework/libLogConfigTimeAndroid/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../ImageProcessing/libTwoColorCircleMarker/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/toolchains/arm-linux-androideabi-4.6/prebuilt/windows-x86_64/lib/gcc/arm-linux-androideabi/4.6/include&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1516197101" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>

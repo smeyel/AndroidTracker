@@ -252,11 +252,20 @@ JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIE
 		jmethodID cid = env->GetMethodID(trackerDataClass,"<init>","()V");
 		jobject obj = env->NewObject(trackerDataClass, cid);
 
-		jfieldID fid_x = env->GetFieldID(trackerDataClass , "posx", "D");
-		env->SetDoubleField(obj, fid_x, foundMarkers[i].center.x);
+		jfieldID fid_mid = env->GetFieldID(trackerDataClass , "markerid", "I");
+		env->SetIntField(obj, fid_mid, foundMarkers[i].MarkerID);
 
-		jfieldID fid_y = env->GetFieldID(trackerDataClass , "posy", "D");
-		env->SetDoubleField(obj, fid_y, foundMarkers[i].center.y);
+		jfieldID fid_px = env->GetFieldID(trackerDataClass , "posx", "D");
+		env->SetDoubleField(obj, fid_px, foundMarkers[i].center.x);
+
+		jfieldID fid_py = env->GetFieldID(trackerDataClass , "posy", "D");
+		env->SetDoubleField(obj, fid_py, foundMarkers[i].center.y);
+
+		jfieldID fid_sx = env->GetFieldID(trackerDataClass , "sizex", "D");
+		env->SetDoubleField(obj, fid_sx, foundMarkers[i].innerEllipse.size.width);
+
+		jfieldID fid_sy = env->GetFieldID(trackerDataClass , "sizey", "D");
+		env->SetDoubleField(obj, fid_sy, foundMarkers[i].innerEllipse.size.height);
 
 		jfieldID fid_b = env->GetFieldID(trackerDataClass , "valid", "Z");
 		env->SetBooleanField(obj, fid_b, foundMarkers[i].isCenterValid);
