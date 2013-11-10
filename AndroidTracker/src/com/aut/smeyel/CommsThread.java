@@ -177,6 +177,8 @@ class CommsThread implements Runnable {
 	                    TM.Stop(WaitingMsID);
 	                    TM.Start(TakePictureMsID);
 	                    mOpenCvCameraView.takePicture();
+	                    
+	                    byte[] mybytearray;
 	               		
 	                    Log.i(TAG, "Waiting for sync...");
 	                    synchronized (MainActivity.syncObj)
@@ -190,45 +192,45 @@ class CommsThread implements Runnable {
 
 	                    		Log.i(TAG,"Wait() finished");
 	                    	}
+	                    	mybytearray = mOpenCvCameraView.lastPhotoData;
 	                    }
 	                    Log.i(TAG, "Sync received, sending picture...");
-	                    
-	            			// Get output stream from the CommsThread
-	            			OutputStream os = s.getOutputStream();
-	            			// Prepare data to send
-	            			byte[] mybytearray = mOpenCvCameraView.lastPhotoData;
-	            			
-	            	        String buff = Integer.toString(mybytearray.length);
-	            	        
-	            	        StringBuilder sb = new StringBuilder("{\"type\":\"JPEG\",\"size\":\""); 
-	            	        sb.append(buff);
-	            	        sb.append("\",\"timestamp\":\"");
-	            	        sb.append(Long.toString(CameraPreview.OnShutterEventTimestamp));
-	            	        sb.append("\"}#");
-	            	        String JSON_message = sb.toString();
-	            	        
-	            	        
-	            	        // Send data
-	            	        CommsThread.TM.Stop(CommsThread.PostProcessPostJpegMsID);
-	            	        CommsThread.TM.Stop(CommsThread.AllNoCommMsID);
-	            	        CommsThread.TM.Start(CommsThread.SendingJsonMsID);
-	            	        
-	            	        Log.i("COMM","Sending JSON and image to PC");
-	            	        DataOutputStream output = new DataOutputStream(os);     
-	            	        output.writeUTF(JSON_message);
-	            	        output.flush();
-	            	        CommsThread.TM.Stop(CommsThread.SendingJsonMsID);
-	            	        CommsThread.TM.Start(CommsThread.SendingJpegMsID);
-	            	        // ??? Ezt nem az output-ba kellene írni?
-	            	        os.write(mybytearray,0,mybytearray.length);
-	            	        
-	            	        // Flush output stream
-	            	        os.flush();
-	            	        CommsThread.TM.Stop(CommsThread.SendingJpegMsID);
-	            	        CommsThread.TM.Stop(CommsThread.AllMsID);
-	            	        // Notify CommsThread that data has been sent
-	            	        Log.i("COMM","Data sent.");      	           
-	                    
+
+	                    // Get output stream from the CommsThread
+	                    OutputStream os = s.getOutputStream();
+	                    // Prepare data to send
+
+	                    String buff = Integer.toString(mybytearray.length);
+
+	                    StringBuilder sb = new StringBuilder("{\"type\":\"JPEG\",\"size\":\""); 
+	                    sb.append(buff);
+	                    sb.append("\",\"timestamp\":\"");
+	                    sb.append(Long.toString(CameraPreview.OnShutterEventTimestamp));
+	                    sb.append("\"}#");
+	                    String JSON_message = sb.toString();
+
+
+	                    // Send data
+	                    CommsThread.TM.Stop(CommsThread.PostProcessPostJpegMsID);
+	                    CommsThread.TM.Stop(CommsThread.AllNoCommMsID);
+	                    CommsThread.TM.Start(CommsThread.SendingJsonMsID);
+
+	                    Log.i("COMM","Sending JSON and image to PC");
+	                    DataOutputStream output = new DataOutputStream(os);     
+	                    output.writeUTF(JSON_message);
+	                    output.flush();
+	                    CommsThread.TM.Stop(CommsThread.SendingJsonMsID);
+	                    CommsThread.TM.Start(CommsThread.SendingJpegMsID);
+	                    // ??? Ezt nem az output-ba kellene írni?
+	                    os.write(mybytearray,0,mybytearray.length);
+
+	                    // Flush output stream
+	                    os.flush();
+	                    CommsThread.TM.Stop(CommsThread.SendingJpegMsID);
+	                    CommsThread.TM.Stop(CommsThread.AllMsID);
+	                    // Notify CommsThread that data has been sent
+	                    Log.i("COMM","Data sent.");      	           
+
 	               	} else if(type.equals("ping"))	// ----------- PING command
 	               	{
 	                    Log.i(TAG, "Cmd: ping...");
@@ -255,9 +257,9 @@ class CommsThread implements Runnable {
 	                    		MainActivity.syncObj.wait();
 	                    	}
 	                    	
-	                    	StringBuilder sb = new StringBuilder("{\"type\":\"JPEG\",\"size\":\""); 
+	                    	StringBuilder sb = new StringBuilder("{\"type\":\"POSITION\",\"size\":\""); //TODO type, etc
 	            	        sb.append("\",\"timestamp\":\"");
-	            	        sb.append(Long.toString(CameraPreview.OnShutterEventTimestamp));
+	            	        sb.append(Long.toString(MainActivity.OnCameraTimestamp));
 	            	        
 	            	        // TODO: write timestamp
 		                    for(TrackerData td : MainActivity.trackerDatas) {
@@ -272,7 +274,6 @@ class CommsThread implements Runnable {
 		                    output.writeUTF(JSON_message);
 	            	        output.flush();
 		                    
-		                    //double x = 0, y = 0;
 		                    // TODO: send TrackerDatas if available - in a while loop maybe
 	            	        
 	                    	MainActivity.trackerDatas = null;

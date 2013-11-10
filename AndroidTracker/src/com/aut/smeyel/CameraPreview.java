@@ -31,8 +31,8 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 	private boolean saveToSD = false;
 	byte[] lastPhotoData;
 	
-	static long OnShutterEventTimestamp;
-	static long OnPreviewTimestamp;
+	static volatile long OnShutterEventTimestamp;
+//	static long OnPreviewTimestamp;
 	String current_time = null;
 	
 	Handler handler = null;
@@ -53,13 +53,14 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 		}
 	};
 	
-	@Override
-	public void onPreviewFrame(byte[] frame, Camera arg1) {
-		// TODO might be a good place to get timestamp though onShutter() is probably more accurate - but only available for takePicture()
-		OnPreviewTimestamp = TimeMeasurement.getTimeStamp();
-//		Log.e(TAG,"aaaaaaaaapre" + OnPreviewTimestamp);
-		super.onPreviewFrame(frame, arg1);
-	}
+//	@Override
+//	public void onPreviewFrame(byte[] frame, Camera arg1) {
+//		// TODO might be a good place to get timestamp though onShutter() is probably more accurate - but only available for takePicture()
+//		// probably shouldn't use this timestamp, because onPreviewFrame method can be called again until an onCameraFrame is called
+//		OnPreviewTimestamp = TimeMeasurement.getTimeStamp();
+////		Log.d(TAG,"aaaaaaaaapre" + OnPreviewTimestamp);
+//		super.onPreviewFrame(frame, arg1);
+//	}
 	
 //	@Override
 //	protected boolean initializeCamera(int width, int height) {
@@ -161,9 +162,9 @@ public class CameraPreview extends JavaCameraView implements PictureCallback {
 			}
 			Log.v(TAG, "Picture saved at path: " + pictureFile);
 		}
-		lastPhotoData = data;
 		synchronized (MainActivity.syncObj) //notifys the Commsthread, if the picture is complete
 		{
+			lastPhotoData = data;
 			CommsThread.isPictureComplete = true;
 			MainActivity.syncObj.notifyAll();
 		}

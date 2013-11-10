@@ -91,6 +91,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	static String mClientMsg = "";
 	static final Object syncObj = new Object();
 	public static volatile TrackerData[] trackerDatas = null;
+	static volatile long OnCameraTimestamp;
 	
 	CommsThread myCommThread = null;
 	Thread myThread = null;
@@ -291,8 +292,10 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		// so there's probably no need to run (native) processing operations in separate thread
 		// (unless we want more continuous unprocessed preview pictures)
 		
-		long OnCameraTimestamp = TimeMeasurement.getTimeStamp();
-//		Log.e(TAG,"aaaaaaaaacam" + OnCameraTimestamp);
+		
+		// getting timestamp here to be more accurate
+		long tempTimestamp = TimeMeasurement.getTimeStamp();
+//		Log.d(TAG,"aaaaaaaaacam" + OnCameraTimestamp);
 		
 		// keeping connection alive
 		if(myThread == null || myCommThread == null || myCommThread.isTerminating()) {
@@ -314,6 +317,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 				mGray = inputFrame.gray();
 				TrackerData[] result = nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
 				synchronized (syncObj) {
+					OnCameraTimestamp = tempTimestamp;
 					trackerDatas = result;
 					syncObj.notifyAll();
 				}
