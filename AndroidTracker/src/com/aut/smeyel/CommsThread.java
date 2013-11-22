@@ -247,7 +247,7 @@ class CommsThread implements Runnable {
 	               	{
 	               		Log.i(TAG, "Cmd: send position");
 	               		
-	               		Message positionModeMessage = handler.obtainMessage(MainActivity.CHANGE_OPERATING_MODE_ID, MainActivity.OperatingMode.POSITION_PER_REQUEST.ordinal(), 0);
+	               		Message positionModeMessage = handler.obtainMessage(MainActivity.CHANGE_OPERATING_MODE_ID, MainActivity.OperatingMode.POSITION_STREAM.ordinal(), 0);
 	               		positionModeMessage.sendToTarget();
 	               		
 	               		while(!terminating) // TODO: do this on another thread while waiting for stop message
@@ -264,13 +264,22 @@ class CommsThread implements Runnable {
 	               				sb.append(MainActivity.trackerDatas.length);
 	               				sb.append("\",\"timestamp\":\"");
 	               				sb.append(Long.toString(MainActivity.OnCameraTimestamp));
-	               				sb.append("\",\"trackerdatas\":\"");
+	               				sb.append("\"");
 
+	               				int i = 0;
 	               				for(TrackerData td : MainActivity.trackerDatas) {
-	               					sb.append("mid: " + td.markerid + " px: " + td.posx + " py: " + td.posy + "sx: " + td.sizex + " sy: " + td.sizey + " valid: " + td.valid + "&"); // TODO: separating symbol, etc?
+	               					sb.append(",\"markerid" + i + "\":\"" + td.markerid + "\"");
+	               					sb.append(",\"posx" + i + "\":\"" + td.posx + "\"");
+	               					sb.append(",\"posy" + i + "\":\"" + td.posy + "\"");
+	               					sb.append(",\"sizex" + i + "\":\"" + td.sizex + "\"");
+	               					sb.append(",\"sizey" + i + "\":\"" + td.sizey + "\"");
+	               					sb.append(",\"valid" + i + "\":\"" + (td.valid ? 1 : 0) + "\"");
+	               					sb.append(",\"centervalid" + i + "\":\"" + (td.centervalid ? 1 : 0) + "\"");
+	               					
+	               					i++;
 	               				}
 
-	               				sb.append("\"}#");
+	               				sb.append("}#");
 	               				String JSON_message = sb.toString();
 
 	               				out = s.getOutputStream();       

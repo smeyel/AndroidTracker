@@ -190,7 +190,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	{
 		switch(currentOperatingMode) {
 			case IDLE: break;
-			case POSITION_PER_REQUEST:
+			case POSITION_STREAM:
 				SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 				String configLocation = sharedPref.getString("pref_configFileLocation", Environment.getExternalStorageDirectory().getPath() + "rossz.ini");
 				nativeInitTracker(width, height, configLocation);
@@ -204,7 +204,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	{
 		switch(currentOperatingMode) {
 			case IDLE: break;
-			case POSITION_PER_REQUEST: nativeReleaseTracker();
+			case POSITION_STREAM: nativeReleaseTracker();
 			default: break;
 		}
 	}
@@ -313,7 +313,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		switch(currentOperatingMode) {
 			case IDLE:
 				return mRgba;
-			case POSITION_PER_REQUEST:
+			case POSITION_STREAM:
 				mGray = inputFrame.gray();
 				TrackerData[] result = nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
 				synchronized (syncObj) {
@@ -331,7 +331,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		// TODO Auto-generated method stub
-//		changeOperatingMode(OperatingMode.POSITION_PER_REQUEST);
+//		changeOperatingMode(OperatingMode.POSITION_STREAM);
 		return false;
 	}
 	
@@ -398,8 +398,8 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 			case CHANGE_OPERATING_MODE_ID:
 				if(msg.arg1 == OperatingMode.PICTURE_PER_REQUEST.ordinal()) {
 					changeOperatingMode(OperatingMode.PICTURE_PER_REQUEST);
-				} else if(msg.arg1 == OperatingMode.POSITION_PER_REQUEST.ordinal()) {
-					changeOperatingMode(OperatingMode.POSITION_PER_REQUEST);
+				} else if(msg.arg1 == OperatingMode.POSITION_STREAM.ordinal()) {
+					changeOperatingMode(OperatingMode.POSITION_STREAM);
 				} else {
 					Log.e(TAG,"Invalid operating mode requested.");
 				}

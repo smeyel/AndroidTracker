@@ -267,8 +267,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIE
 		jfieldID fid_sy = env->GetFieldID(trackerDataClass , "sizey", "D");
 		env->SetDoubleField(obj, fid_sy, foundMarkers[i].innerEllipse.size.height);
 
-		jfieldID fid_b = env->GetFieldID(trackerDataClass , "valid", "Z");
-		env->SetBooleanField(obj, fid_b, foundMarkers[i].isCenterValid);
+		jfieldID fid_v = env->GetFieldID(trackerDataClass , "valid", "Z");
+		env->SetBooleanField(obj, fid_v, foundMarkers[i].isValid);
+
+		jfieldID fid_cv = env->GetFieldID(trackerDataClass , "centervalid", "Z");
+		env->SetBooleanField(obj, fid_cv, foundMarkers[i].isCenterValid);
 
 		env->SetObjectArrayElement(trackerDataArray, i, obj);
 

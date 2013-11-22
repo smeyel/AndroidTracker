@@ -11,6 +11,8 @@ public class TrackerData {
 	public double sizey;
 	
 	public boolean valid;
-	// TODO: long timestamp - not really needed here - only one common for all, etc.
+	public boolean centervalid;
+	// long timestamp - not really needed here - only one common for all, etc.
+	// TODO: other fields? (all of MarkerCC2?)
 
 }
