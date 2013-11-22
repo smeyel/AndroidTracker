@@ -250,34 +250,37 @@ class CommsThread implements Runnable {
 	               		Message positionModeMessage = handler.obtainMessage(MainActivity.CHANGE_OPERATING_MODE_ID, MainActivity.OperatingMode.POSITION_PER_REQUEST.ordinal(), 0);
 	               		positionModeMessage.sendToTarget();
 	               		
-	                    synchronized (MainActivity.syncObj)
-	                    {
-	                    	while(MainActivity.trackerDatas == null)
-	                    	{
-	                    		MainActivity.syncObj.wait();
-	                    	}
-	                    	
-	                    	StringBuilder sb = new StringBuilder("{\"type\":\"POSITION\",\"size\":\""); //TODO type, etc
-	            	        sb.append("\",\"timestamp\":\"");
-	            	        sb.append(Long.toString(MainActivity.OnCameraTimestamp));
-	            	        
-	            	        // TODO: write timestamp
-		                    for(TrackerData td : MainActivity.trackerDatas) {
-		                    	sb.append("x: " + td.posx + " y: " + td.posy + " valid: " + td.valid + ","); // TODO: separating symbol, etc?
-		                    }
-		                    
-	            	        sb.append("\"}#");
-	            	        String JSON_message = sb.toString();
-		                	
-		               		out = s.getOutputStream();       
-		                    DataOutputStream output = new DataOutputStream(out);
-		                    output.writeUTF(JSON_message);
-	            	        output.flush();
-		                    
-		                    // TODO: send TrackerDatas if available - in a while loop maybe
-	            	        
-	                    	MainActivity.trackerDatas = null;
-	                    }
+	               		while(!terminating) // TODO: do this on another thread while waiting for stop message
+	               		{
+
+	               			synchronized (MainActivity.syncObj)
+	               			{
+	               				while(MainActivity.trackerDatas == null)
+	               				{
+	               					MainActivity.syncObj.wait();
+	               				}
+
+	               				StringBuilder sb = new StringBuilder("{\"type\":\"position\",\"size\":\""); //TODO type, etc
+	               				sb.append(MainActivity.trackerDatas.length);
+	               				sb.append("\",\"timestamp\":\"");
+	               				sb.append(Long.toString(MainActivity.OnCameraTimestamp));
+	               				sb.append("\",\"trackerdatas\":\"");
+
+	               				for(TrackerData td : MainActivity.trackerDatas) {
+	               					sb.append("mid: " + td.markerid + " px: " + td.posx + " py: " + td.posy + "sx: " + td.sizex + " sy: " + td.sizey + " valid: " + td.valid + "&"); // TODO: separating symbol, etc?
+	               				}
+
+	               				sb.append("\"}#");
+	               				String JSON_message = sb.toString();
+
+	               				out = s.getOutputStream();       
+	               				DataOutputStream output = new DataOutputStream(out);
+	               				output.writeUTF(JSON_message);
+	               				output.flush();
+
+	               				MainActivity.trackerDatas = null;
+	               			}
+	               		}
 	                    
 	                    
 	               	}
