@@ -315,7 +315,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 				return mRgba;
 			case POSITION_STREAM:
 				mGray = inputFrame.gray();
-				TrackerData[] result = nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr());
+				TrackerData[] result = nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr(), tempTimestamp);
 				synchronized (syncObj) {
 					OnCameraTimestamp = tempTimestamp;
 					trackerDatas = result;
@@ -458,7 +458,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	public native void nativeFindCircles(long matAddrGr, long matAddrRgba);
 	
 	public native void nativeInitTracker(int width, int height, String configFileLocation);
-	public native TrackerData[] nativeTrack(long matAddrInput, long matAddrResult);
+	public native TrackerData[] nativeTrack(long matAddrInput, long matAddrResult, long timestamp);
 	public native void nativeReleaseTracker();
 	
 

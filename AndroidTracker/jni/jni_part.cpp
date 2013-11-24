@@ -40,6 +40,7 @@ const char* intToCharStar(int i) {
 //bool lastKnownValid = false;
 
 vector<MarkerCC2> foundMarkers;
+long long currentTimestamp;
 
 class ResultExporter : public TwoColorCircleMarker::DetectionResultExporterBase
 {
@@ -82,6 +83,101 @@ public:
 		}
 
 //		Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Position: %f %f Valid: %d\n", lastKnownX, lastKnownY, valid);
+	}
+	virtual ~ResultExporter() {};
+};
+
+class PositionEstimatorResultExporter : public TwoColorCircleMarker::DetectionResultExporterBase
+{
+private:
+	int currentMarkerID;
+	deque<MarkerCC2> previousMarkers;
+	deque<long long> previousTimestamps;
+
+public:
+
+	virtual void writeResult(MarkerBase *marker)
+	{
+		MarkerCC2* markerCc2 = (MarkerCC2*) marker;
+		if(markerCc2 != NULL) {
+			if(markerCc2->MarkerID == currentMarkerID) // id is the currently observed
+			{
+
+				// filter multiple occurrences of the same marker within a single image
+				if(previousTimestamps.size() >= 1)
+				{
+					if(currentTimestamp == previousTimestamps[previousTimestamps.size()-1])
+					{
+						return;
+					}
+				}
+
+				// estimate
+
+				if(previousMarkers.size() >= 3 && previousTimestamps.size() >= 3)
+				{
+					Point2d estimation = estimatePositionForTime(currentTimestamp);
+
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Estimated: %f %f Real: %f %f", estimation.x, estimation.y, markerCc2->center.x, markerCc2->center.y);
+				}
+
+
+				// fifo elements
+				if(previousMarkers.size() >= 3)
+				{
+					previousMarkers.pop_front();
+				}
+				previousMarkers.push_back(*markerCc2);
+
+				if(previousTimestamps.size() >= 3)
+				{
+					previousTimestamps.pop_front();
+				}
+				previousTimestamps.push_back(currentTimestamp);
+
+			}
+		}
+
+	}
+
+	void setMarkerID(int markerid)
+	{
+		currentMarkerID = markerid;
+	}
+
+	Point2d estimatePositionForTime(long long timestamp)
+	{
+		if(previousMarkers.size() >= 3 && previousTimestamps.size() >= 3)
+		{
+			return estimatePosC2(previousMarkers[0].center, previousMarkers[1].center, previousMarkers[2].center, previousTimestamps[0], previousTimestamps[1], previousTimestamps[2], timestamp);
+
+		} else
+		{
+			Logger::getInstance()->Log(Logger::LOGLEVEL_ERROR, LOG_TAG, "You have only %d previous positions, need 3 to estimate.", previousMarkers.size());
+			return Point2d();
+		}
+	}
+
+	Point2d estimatePosC2(Point2d P0, Point2d P1, Point2d P2, long long t0, long long t1, long long t2, long long t)
+	{
+		long long dt1 = t1 - t0;
+		long long dt2 = t2 - t1;
+		long long dt3 = t - t2;
+
+		double dt1rec = 1.0 / (double) dt1;
+		double dt2rec = 1.0 / (double) dt2;
+
+		Point2d v2 = (P2 - P1) * dt2rec;
+		Point2d v1 = (P1 - P0) * dt1rec;
+
+		Point2d a = (v2 - v1) * ( 2.0 / double (dt1 + dt2));
+
+		return P2 + (v2 + a * ((double) dt2 * 0.5)) * (double) dt3 + a * 0.5 * double (dt3 * dt3);
+	}
+	virtual ~PositionEstimatorResultExporter()
+	{
+		previousMarkers.clear();
+		previousTimestamps.clear();
 	}
 };
 
@@ -179,7 +275,8 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeFindCircles(JNIEnv
 
 //MarkerHandler markerHandler;
 TwoColorCircleMarker::MarkerCC2Tracker* tracker = NULL;
-ResultExporter resultExporter;
+//ResultExporter resultExporter;
+PositionEstimatorResultExporter resultExporter;
 
 MyConfigManager configManager;
 //char *configfilename = "/sdcard/testini2.ini";
@@ -207,11 +304,13 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeInitTracker(JNIEnv
 //	int iii = configManager.waitKeyPressAtEnd ? 1 : 0;
 
 
-	if(tracker == NULL) {
-		tracker = new TwoColorCircleMarker::MarkerCC2Tracker();
-		tracker->setResultExporter(&resultExporter);
-		tracker->init(configfilename, true, width, height); // ez sokszor meghivodik (minden resume-kor), memoriaszivargasra figyelni
+	if(tracker != NULL) {
+		delete tracker;
 	}
+	tracker = new TwoColorCircleMarker::MarkerCC2Tracker();
+	resultExporter.setMarkerID(42);
+	tracker->setResultExporter(&resultExporter);
+	tracker->init(configfilename, true, width, height); // ez sokszor meghivodik (minden resume-kor), memoriaszivargasra figyelni
 
 
 
@@ -220,11 +319,12 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeInitTracker(JNIEnv
 
 }
 
-JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult);
+JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult, jlong timestamp);
 
-JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult)
+JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult, jlong timestamp)
 {
 	foundMarkers.clear();
+	currentTimestamp = timestamp;
 
 	Mat& mInput  = *(Mat*)addrInput;
 	Mat& mResult = *(Mat*)addrResult;
