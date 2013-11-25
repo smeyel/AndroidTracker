@@ -315,13 +315,12 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 				return mRgba;
 			case POSITION_STREAM:
 				mGray = inputFrame.gray();
-				TrackerData[] result = nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr(), tempTimestamp);
+				TrackerData[] result = nativeTrack(mRgba.getNativeObjAddr(), mResult.getNativeObjAddr(), tempTimestamp); // TODO: this might be needed to be synchronized
 				synchronized (syncObj) {
 					OnCameraTimestamp = tempTimestamp;
 					trackerDatas = result;
 					syncObj.notifyAll();
 				}
-				// TODO: send trackerData via CommThread
 				return mResult;
 			default:
 				return mRgba;

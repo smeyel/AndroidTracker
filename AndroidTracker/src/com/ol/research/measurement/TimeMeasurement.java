@@ -122,7 +122,7 @@ public class TimeMeasurement {
 		{
 			double TickFrequency = Core.getTickFrequency();
 			double divider = TickFrequency / 1000000.0;
-			long tick = Core.getCPUTickCount();
+			long tick = Core.getCPUTickCount(); // shouldn't we use Core.getTickCount() instead?
 			long timestamp = (long)(Math.round(tick / divider));
 			return timestamp;	// Returns in microseconds
 		}

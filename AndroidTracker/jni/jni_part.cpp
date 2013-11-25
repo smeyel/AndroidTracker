@@ -39,6 +39,13 @@ const char* intToCharStar(int i) {
 //double lastKnownY = 0.0;
 //bool lastKnownValid = false;
 
+class MarkerCC2withTimestamp
+{
+public:
+	MarkerCC2 marker;
+	long long timestamp;
+};
+
 vector<MarkerCC2> foundMarkers;
 long long currentTimestamp;
 
@@ -91,8 +98,11 @@ class PositionEstimatorResultExporter : public TwoColorCircleMarker::DetectionRe
 {
 private:
 	int currentMarkerID;
-	deque<MarkerCC2> previousMarkers;
-	deque<long long> previousTimestamps;
+	deque<MarkerCC2withTimestamp> previousMarkersWithTimes;
+
+	Point2d c0est;
+	Point2d c1est;
+	Point2d c2est;
 
 public:
 
@@ -104,9 +114,9 @@ public:
 			{
 
 				// filter multiple occurrences of the same marker within a single image
-				if(previousTimestamps.size() >= 1)
+				if(previousMarkersWithTimes.size() >= 1)
 				{
-					if(currentTimestamp == previousTimestamps[previousTimestamps.size()-1])
+					if(currentTimestamp == previousMarkersWithTimes[previousMarkersWithTimes.size()-1].timestamp)
 					{
 						return;
 					}
@@ -114,26 +124,35 @@ public:
 
 				// estimate
 
-				if(previousMarkers.size() >= 3 && previousTimestamps.size() >= 3)
-				{
-					Point2d estimation = estimatePositionForTime(currentTimestamp);
 
-					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Estimated: %f %f Real: %f %f", estimation.x, estimation.y, markerCc2->center.x, markerCc2->center.y);
+				int estimationsC = estimatePositionForTime(currentTimestamp);
+
+				if(estimationsC == 2)
+				{
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f C0Est: %f %f C1Est: %f %f C2Est: %f %f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y, c1est.x, c1est.y, c2est.x, c2est.y);
+
+				} else if(estimationsC == 1)
+				{
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f C0Est: %f %f C1Est: %f %f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y, c1est.x, c1est.y);
+
+				} else if(estimationsC == 0)
+				{
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f C0Est: %f %f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y);
+
+				} else {
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f", markerCc2->center.x, markerCc2->center.y);
 				}
 
 
 				// fifo elements
-				if(previousMarkers.size() >= 3)
+				if(previousMarkersWithTimes.size() >= 3)
 				{
-					previousMarkers.pop_front();
+					previousMarkersWithTimes.pop_front();
 				}
-				previousMarkers.push_back(*markerCc2);
-
-				if(previousTimestamps.size() >= 3)
-				{
-					previousTimestamps.pop_front();
-				}
-				previousTimestamps.push_back(currentTimestamp);
+				MarkerCC2withTimestamp newMarkerWithTime;
+				newMarkerWithTime.marker = *markerCc2;
+				newMarkerWithTime.timestamp = currentTimestamp;
+				previousMarkersWithTimes.push_back(newMarkerWithTime);
 
 			}
 		}
@@ -145,39 +164,90 @@ public:
 		currentMarkerID = markerid;
 	}
 
-	Point2d estimatePositionForTime(long long timestamp)
+	int estimatePositionForTime(long long timestamp)
 	{
-		if(previousMarkers.size() >= 3 && previousTimestamps.size() >= 3)
+		if(previousMarkersWithTimes.size() >= 3)
 		{
-			return estimatePosC2(previousMarkers[0].center, previousMarkers[1].center, previousMarkers[2].center, previousTimestamps[0], previousTimestamps[1], previousTimestamps[2], timestamp);
+			estimatePosCnForTime(2, timestamp);
+			return 2;
 
-		} else
+		} else if(previousMarkersWithTimes.size() >= 2)
 		{
-			Logger::getInstance()->Log(Logger::LOGLEVEL_ERROR, LOG_TAG, "You have only %d previous positions, need 3 to estimate.", previousMarkers.size());
-			return Point2d();
+			estimatePosCnForTime(1, timestamp);
+			return 1;
+
+		} else if(previousMarkersWithTimes.size() >= 1)
+		{
+			estimatePosCnForTime(0, timestamp);
+			return 0;
+		} else {
+			return -1;
 		}
 	}
 
-	Point2d estimatePosC2(Point2d P0, Point2d P1, Point2d P2, long long t0, long long t1, long long t2, long long t)
+	/** supported Cs: C0, C1, C2, results are written to c0est, c1est, c2est **/
+	void estimatePosCnForTime(int c, long long timestamp)
 	{
-		long long dt1 = t1 - t0;
-		long long dt2 = t2 - t1;
-		long long dt3 = t - t2;
 
-		double dt1rec = 1.0 / (double) dt1;
-		double dt2rec = 1.0 / (double) dt2;
+		// M_0: previous point, M_1: the point before that, M_2: the point before that etc.
 
-		Point2d v2 = (P2 - P1) * dt2rec;
-		Point2d v1 = (P1 - P0) * dt1rec;
+		if(c >= 0)
+		{
+			if(previousMarkersWithTimes.size() < 1)
+			{
+				Logger::getInstance()->Log(Logger::LOGLEVEL_ERROR, LOG_TAG, "You have only %d previous positions, need 1 to estimate.", previousMarkersWithTimes.size());
+				return;
+			}
 
-		Point2d a = (v2 - v1) * ( 2.0 / double (dt1 + dt2));
+			MarkerCC2withTimestamp M_0 = previousMarkersWithTimes[previousMarkersWithTimes.size()-1];
+			long long dt_0 = timestamp - M_0.timestamp;
 
-		return P2 + (v2 + a * ((double) dt2 * 0.5)) * (double) dt3 + a * 0.5 * double (dt3 * dt3);
+			c0est = M_0.marker.center;
+
+
+			if(c >= 1)
+			{
+				if(previousMarkersWithTimes.size() < 2)
+				{
+					Logger::getInstance()->Log(Logger::LOGLEVEL_ERROR, LOG_TAG, "You have only %d previous positions, need 2 to estimate.", previousMarkersWithTimes.size());
+					return;
+				}
+
+				MarkerCC2withTimestamp M_1 = previousMarkersWithTimes[previousMarkersWithTimes.size()-2];
+				long long dt_1 = M_0.timestamp - M_1.timestamp;
+				double dt_1rec = 1.0 / (double) dt_1;
+
+				Point2d v_0 = (M_0.marker.center - M_1.marker.center) * dt_1rec;
+
+				c1est = M_0.marker.center + v_0 * (double) dt_0;
+
+				if(c >= 2)
+				{
+					if(previousMarkersWithTimes.size() < 3)
+					{
+						Logger::getInstance()->Log(Logger::LOGLEVEL_ERROR, LOG_TAG, "You have only %d previous positions, need 3 to estimate.", previousMarkersWithTimes.size());
+						return;
+					}
+
+					MarkerCC2withTimestamp M_2 = previousMarkersWithTimes[previousMarkersWithTimes.size()-3];
+					long long dt_2 = M_1.timestamp - M_2.timestamp;
+					double dt_2rec = 1.0 / (double) dt_2;
+
+					Point2d v_1 = (M_1.marker.center - M_2.marker.center) * dt_2rec;
+
+					Point2d a_0 = (v_0 - v_1) * ( 2.0 / double (dt_2 + dt_1));
+
+					c2est = M_0.marker.center + (v_0 + a_0 * ((double) dt_1 * 0.5)) * (double) dt_0 + a_0 * 0.5 * double (dt_0 * dt_0);
+
+				}
+
+			}
+
+		}
 	}
 	virtual ~PositionEstimatorResultExporter()
 	{
-		previousMarkers.clear();
-		previousTimestamps.clear();
+		previousMarkersWithTimes.clear();
 	}
 };
 
@@ -215,6 +285,8 @@ public:
 	bool waitFor25Fps;
 	bool waitKeyPressAtEnd;
 	bool runMultipleIterations;
+
+	virtual ~MyConfigManager() {}
 };
 
 extern "C" {
@@ -312,20 +384,28 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeInitTracker(JNIEnv
 	tracker->setResultExporter(&resultExporter);
 	tracker->init(configfilename, true, width, height); // ez sokszor meghivodik (minden resume-kor), memoriaszivargasra figyelni
 
-
-
-
-
-
 }
 
 JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult, jlong timestamp);
 
 JNIEXPORT jobjectArray JNICALL Java_com_aut_smeyel_MainActivity_nativeTrack(JNIEnv* env, jobject thisObj, jlong addrInput, jlong addrResult, jlong timestamp)
 {
+	// clearing previously found markers
 	foundMarkers.clear();
+
+//	// getting and rounding timestamp
+//	if(timestamp >= 0) {
+//		timestamp += 500LL;
+//	}
+//	else {
+//		timestamp -= 500LL;
+//	}
+//	currentTimestampInMs = timestamp / 1000LL;
+
+	// getting timestamp
 	currentTimestamp = timestamp;
 
+	// getting and processing Mats
 	Mat& mInput  = *(Mat*)addrInput;
 	Mat& mResult = *(Mat*)addrResult;
 
