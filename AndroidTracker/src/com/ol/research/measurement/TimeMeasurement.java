@@ -114,7 +114,7 @@ public class TimeMeasurement {
 		}
 	}
 	
-	/**Determines the actual timestamp in milliseconds.
+	/**Determines the actual timestamp in microseconds.
 	 * @return Timestamp, if OpenCV is loaded, -1 if it is not.*/
 	public static long getTimeStamp()
 	{

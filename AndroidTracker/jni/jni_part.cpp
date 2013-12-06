@@ -129,18 +129,18 @@ public:
 
 				if(estimationsC == 2)
 				{
-					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f C0Est: %f %f C1Est: %f %f C2Est: %f %f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y, c1est.x, c1est.y, c2est.x, c2est.y);
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, ",Real:,%f,%f,C0Est:,%f,%f,C1Est:,%f,%f,C2Est:,%f,%f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y, c1est.x, c1est.y, c2est.x, c2est.y);
 
 				} else if(estimationsC == 1)
 				{
-					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f C0Est: %f %f C1Est: %f %f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y, c1est.x, c1est.y);
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, ",Real:,%f,%f,C0Est:,%f,%f,C1Est:,%f,%f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y, c1est.x, c1est.y);
 
 				} else if(estimationsC == 0)
 				{
-					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f C0Est: %f %f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y);
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, ",Real:,%f,%f,C0Est:,%f,%f", markerCc2->center.x, markerCc2->center.y, c0est.x, c0est.y);
 
 				} else {
-					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, "Real: %f %f", markerCc2->center.x, markerCc2->center.y);
+					Logger::getInstance()->Log(Logger::LOGLEVEL_INFO, LOG_TAG, ",Real:,%f,%f", markerCc2->center.x, markerCc2->center.y);
 				}
 
 
@@ -199,10 +199,10 @@ public:
 				return;
 			}
 
-			MarkerCC2withTimestamp M_0 = previousMarkersWithTimes[previousMarkersWithTimes.size()-1];
-			long long dt_0 = timestamp - M_0.timestamp;
+			MarkerCC2withTimestamp m_1 = previousMarkersWithTimes[previousMarkersWithTimes.size()-1];
+			long long dt_0 = timestamp - m_1.timestamp;
 
-			c0est = M_0.marker.center;
+			c0est = m_1.marker.center;
 
 
 			if(c >= 1)
@@ -213,13 +213,13 @@ public:
 					return;
 				}
 
-				MarkerCC2withTimestamp M_1 = previousMarkersWithTimes[previousMarkersWithTimes.size()-2];
-				long long dt_1 = M_0.timestamp - M_1.timestamp;
+				MarkerCC2withTimestamp m_2 = previousMarkersWithTimes[previousMarkersWithTimes.size()-2];
+				long long dt_1 = m_1.timestamp - m_2.timestamp;
 				double dt_1rec = 1.0 / (double) dt_1;
 
-				Point2d v_0 = (M_0.marker.center - M_1.marker.center) * dt_1rec;
+				Point2d v_1 = (m_1.marker.center - m_2.marker.center) * dt_1rec;
 
-				c1est = M_0.marker.center + v_0 * (double) dt_0;
+				c1est = m_1.marker.center + v_1 * (double) dt_0;
 
 				if(c >= 2)
 				{
@@ -229,15 +229,15 @@ public:
 						return;
 					}
 
-					MarkerCC2withTimestamp M_2 = previousMarkersWithTimes[previousMarkersWithTimes.size()-3];
-					long long dt_2 = M_1.timestamp - M_2.timestamp;
+					MarkerCC2withTimestamp m_3 = previousMarkersWithTimes[previousMarkersWithTimes.size()-3];
+					long long dt_2 = m_2.timestamp - m_3.timestamp;
 					double dt_2rec = 1.0 / (double) dt_2;
 
-					Point2d v_1 = (M_1.marker.center - M_2.marker.center) * dt_2rec;
+					Point2d v_2 = (m_2.marker.center - m_3.marker.center) * dt_2rec;
 
-					Point2d a_0 = (v_0 - v_1) * ( 2.0 / double (dt_2 + dt_1));
+					Point2d a_1 = (v_1 - v_2) * ( 2.0 / double (dt_2 + dt_1));
 
-					c2est = M_0.marker.center + (v_0 + a_0 * ((double) dt_1 * 0.5)) * (double) dt_0 + a_0 * 0.5 * double (dt_0 * dt_0);
+					c2est = m_1.marker.center + (v_1 + a_1 * ((double) dt_1 * 0.5)) * (double) dt_0 + a_1 * 0.5 * double (dt_0 * dt_0);
 
 				}
 
@@ -347,8 +347,8 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeFindCircles(JNIEnv
 
 //MarkerHandler markerHandler;
 TwoColorCircleMarker::MarkerCC2Tracker* tracker = NULL;
-//ResultExporter resultExporter;
-PositionEstimatorResultExporter resultExporter;
+ResultExporter resultExporter;
+//PositionEstimatorResultExporter resultExporter;
 
 MyConfigManager configManager;
 //char *configfilename = "/sdcard/testini2.ini";
@@ -380,7 +380,7 @@ JNIEXPORT void JNICALL Java_com_aut_smeyel_MainActivity_nativeInitTracker(JNIEnv
 		delete tracker;
 	}
 	tracker = new TwoColorCircleMarker::MarkerCC2Tracker();
-	resultExporter.setMarkerID(42);
+//	resultExporter.setMarkerID(42); // only for PositionEstimatorResultExporter
 	tracker->setResultExporter(&resultExporter);
 	tracker->init(configfilename, true, width, height); // ez sokszor meghivodik (minden resume-kor), memoriaszivargasra figyelni
 

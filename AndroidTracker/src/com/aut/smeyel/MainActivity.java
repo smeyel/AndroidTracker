@@ -295,7 +295,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 		
 		// getting timestamp here to be more accurate
 		long tempTimestamp = TimeMeasurement.getTimeStamp();
-//		Log.d(TAG,"aaaaaaaaacam" + OnCameraTimestamp);
+//		Log.d(TAG,"aaaaaaaaacam" + tempTimestamp + " diff " + (tempTimestamp - CameraPreview.OnPreviewTimestamp));
 		
 		// keeping connection alive
 		if(myThread == null || myCommThread == null || myCommThread.isTerminating()) {
@@ -330,7 +330,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		// TODO Auto-generated method stub
-//		changeOperatingMode(OperatingMode.POSITION_STREAM);
+		changeOperatingMode(OperatingMode.POSITION_STREAM);
 		return false;
 	}
 	
