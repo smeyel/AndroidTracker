@@ -82,7 +82,8 @@ public:
 
 		MarkerCC2* markerCc2 = (MarkerCC2*) marker;
 		if(markerCc2 != NULL) {
-			foundMarkers.push_back(*markerCc2);
+			MarkerCC2 markerCc2copy = MarkerCC2(*markerCc2); //need to copy *marker first, this pointer might be overwritten later
+			foundMarkers.push_back(markerCc2copy);
 //			if(markerCc2->isValid) {
 //				int markerId = markerCc2->MarkerID;
 //				Logger::getInstance()->Log(Logger::LOGLEVEL_ERROR, LOG_TAG, "aaaaaaa: %d", markerId);
