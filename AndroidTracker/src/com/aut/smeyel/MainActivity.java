@@ -90,6 +90,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2, Vie
 	volatile ServerSocket ss = null;
 	static String mClientMsg = "";
 	static final Object syncObj = new Object();
+	// TODO: static final Object syncObjOpMode = new Object(); // synchronize oprating mode change and onCamereFrame()
 	public static volatile TrackerData[] trackerDatas = null;
 	static volatile long OnCameraTimestamp;
 	
