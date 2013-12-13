@@ -12,8 +12,8 @@
     -->
 
     <com.aut.smeyel.CameraPreview
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:visibility="gone"
         android:id="@+id/androidtracker_surface_view"
         opencv:show_fps="true"
@@ -22,7 +22,7 @@
 
 </RelativeLayout>
 
-<!-- faster parameters for com.aut.smeyel.CameraPreview (no resizing):
+<!-- faster parameters for com.aut.smeyel.CameraPreview (no resizing): wrap_content instead of match_parent
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 -->
