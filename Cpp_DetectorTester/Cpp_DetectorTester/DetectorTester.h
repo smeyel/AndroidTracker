@@ -8,6 +8,7 @@
 using std:: vector;
 using std:: string;
 using cv:: Mat;
+using cv:: CascadeClassifier;
 
 class DetectorTools
 {
@@ -19,10 +20,11 @@ protected:
 class DetectorTester : protected DetectorTools
 {
 private:
-	vector<cv::CascadeClassifier> objectCascadeVec;
+	vector<CascadeClassifier> objectCascadeVec;
 	vector<string> detectorNames;										
 	vector< vector<int> > numDetectedObjects;  //[detectornumber][number of pictures, where 'index + 1' objects are found]
 											  // example: numDetectedObjects[0][1] --> Returns that the 0th detector has found 'value' pictures, where 2 objects are found
+	int detectedCounter;
 	void cascadeDetectAndDisplay(cv::Mat image);
 	bool writeResultsToFile(string path, string fileName);
 
@@ -38,6 +40,12 @@ class CannyTools : protected DetectorTools
 public:
 	void createCannyImages(string testPicturesPath, string outputPath, int lowThreshold = 50, int kernelSize = 3);
 	Mat doCannyOnMat(Mat sourceImage, int lowThreshold, int kernel_size, int ratio = 3); //2:1 or 3:1 ratio is recommended 
+};
+
+class CrossValidationTools
+{
+public:
+	void createFourFilesFromAnnotatedFile(string filePath);
 };
 
 #endif

@@ -40,6 +40,8 @@ DetectorTester :: DetectorTester(string cascadeFilePath, string detectorName, in
 		detectedCounter = 1; //default
 	}
 
+	this->detectedCounter = detectedCounter;
+
 	vector<int> tempVec;
 	for(int i=0; i <= detectedCounter + 1 ; i++)
 	{
@@ -65,6 +67,8 @@ DetectorTester :: DetectorTester(vector<string> cascadeFilePaths, vector<string>
 	{
 		detectedCounter = 1; //default
 	}
+
+	this->detectedCounter = detectedCounter;
 
 	vector<int> tempVec;
 	for(int i=0; i <= detectedCounter +1 ; i++)
@@ -106,13 +110,13 @@ void DetectorTester :: cascadeDetectAndDisplay(Mat image)
 		{
 			numDetectedObjects[detNum][0]++;
 		}
-		else if(objects.size() <= numDetectedObjects.size())
+		else if(objects.size() <= detectedCounter)
 		{
 			numDetectedObjects[detNum][objects.size()]++;
 		}
 		else
 		{
-			numDetectedObjects[detNum][numDetectedObjects.size()]++;
+			numDetectedObjects[detNum][detectedCounter+1]++;
 		}
 		
 
@@ -264,4 +268,220 @@ Mat CannyTools:: doCannyOnMat(Mat sourceImage, int lowThreshold, int kernel_size
 	cannyImage = Scalar::all(0); 
 	sourceImage.copyTo(cannyImage, detectedEdges);
 	return cannyImage;
+}
+
+void CrossValidationTools:: createFourFilesFromAnnotatedFile(string txtFilePath)
+{
+	ifstream annotationFile;
+	ofstream infoFile;
+	ofstream txtFile;
+	ostringstream convert;
+	string actualLine;
+	string tempString;
+	string filePath;
+	string fileName;
+	vector<string> vec1;
+	vector<string> vec2;
+	vector<string> vec3;
+	vector<string> vec4;
+	Mat image;
+
+	int lineCounter = 1;
+	int beginPos;
+	int endPos;
+	annotationFile.open(txtFilePath);
+
+	if(annotationFile.is_open())
+	{
+		while(!annotationFile.eof())
+		{	
+			getline(annotationFile, actualLine);
+			switch (lineCounter%4)
+			{
+			case 1:
+				vec1.push_back(actualLine);
+				break;
+			case 2:
+				vec2.push_back(actualLine);
+				break;
+			case 3:
+				vec3.push_back(actualLine);
+				break;
+			case 0:
+				vec4.push_back(actualLine);
+				break;
+			default:
+				break;
+			}
+			lineCounter++;
+		}
+		annotationFile.close();
+	}
+	else
+	{
+		cout<<"The file couldn't be opened\n";
+	}
+
+	mkdir("cross_validation");
+	mkdir("cross_validation\\annotation_files");
+
+	txtFile.open("cross_validation\\annotation_files\\train_4.txt");
+	for(int i=0; i < vec1.size(); i++)
+	{
+		txtFile<<vec1[i]<<"\n";
+	}
+	for(int i=0; i < vec2.size(); i++)
+	{
+		txtFile<<vec2[i]<<"\n";
+	}
+	for(int i=0; i < vec3.size(); i++)
+	{
+		txtFile<<vec3[i]<<"\n";
+	}
+	txtFile.close();
+	mkdir("cross_validation\\testset_4");
+	infoFile.open("cross_validation\\testset_4\\info.txt");
+	for(int i=0; i < vec4.size(); i++)
+	{
+		tempString = vec4[i];
+		if(tempString != "")
+		{
+			endPos = tempString.find("jpg");
+			filePath = tempString.substr(0,endPos);
+			filePath += "jpg";
+
+			beginPos = filePath.find_last_of("\\");
+			fileName = filePath.substr(beginPos+1,endPos);
+
+			image = imread(filePath);
+			filePath = "cross_validation\\testset_4\\";
+			filePath += fileName;
+			imwrite(filePath, image);
+			cout<<fileName<<"\n";
+
+			infoFile<<fileName<<"\n";
+		}
+	}
+	infoFile.close();
+
+
+	txtFile.open("cross_validation\\annotation_files\\train_2.txt");
+	for(int i=0; i < vec3.size(); i++)
+	{
+		txtFile<<vec3[i]<<"\n";
+	}
+	for(int i=0; i < vec4.size(); i++)
+	{
+		txtFile<<vec4[i]<<"\n";
+	}
+	for(int i=0; i < vec1.size(); i++)
+	{
+		txtFile<<vec1[i]<<"\n";
+	}
+	txtFile.close();
+	mkdir("cross_validation\\testset_2");
+	infoFile.open("cross_validation\\testset_2\\info.txt");
+	for(int i=0; i < vec2.size(); i++)
+	{
+		tempString = vec2[i];
+		if(tempString != "")
+		{
+			endPos = tempString.find("jpg");
+			filePath = tempString.substr(0,endPos);
+			filePath += "jpg";
+
+			beginPos = filePath.find_last_of("\\");
+			fileName = filePath.substr(beginPos+1,endPos);
+
+			image = imread(filePath);
+			filePath = "cross_validation\\testset_2\\";
+			filePath += fileName;
+			imwrite(filePath, image);
+			cout<<fileName<<"\n";
+
+			infoFile<<fileName<<"\n";
+		}
+	}
+	infoFile.close();
+
+	txtFile.open("cross_validation\\annotation_files\\train_3.txt");
+	for(int i=0; i < vec4.size(); i++)
+	{
+		txtFile<<vec4[i]<<"\n";
+	}
+	for(int i=0; i < vec1.size(); i++)
+	{
+		txtFile<<vec1[i]<<"\n";
+	}
+	for(int i=0; i < vec2.size(); i++)
+	{
+		txtFile<<vec2[i]<<"\n";
+	}
+	txtFile.close();
+	mkdir("cross_validation\\testset_3");
+	infoFile.open("cross_validation\\testset_3\\info.txt");
+	for(int i=0; i < vec3.size(); i++)
+	{
+		tempString = vec3[i];
+		if(tempString != "")
+		{
+			endPos = tempString.find("jpg");
+			filePath = tempString.substr(0,endPos);
+			filePath += "jpg";
+
+			beginPos = filePath.find_last_of("\\");
+			fileName = filePath.substr(beginPos+1,endPos);
+
+			image = imread(filePath);
+			filePath = "cross_validation\\testset_3\\";
+			filePath += fileName;
+			imwrite(filePath, image);
+			cout<<fileName<<"\n";
+
+			infoFile<<fileName<<"\n";
+		}
+	}
+	infoFile.close();
+
+
+	txtFile.open("cross_validation\\annotation_files\\train_1.txt");
+	for(int i=0; i < vec2.size(); i++)
+	{
+		txtFile<<vec2[i]<<"\n";
+	}
+	for(int i=0; i < vec3.size(); i++)
+	{
+		txtFile<<vec3[i]<<"\n";
+	}
+	for(int i=0; i < vec4.size(); i++)
+	{
+		txtFile<<vec4[i]<<"\n";
+	}
+	txtFile.close();
+	mkdir("cross_validation\\testset_1");
+	infoFile.open("cross_validation\\testset_1\\info.txt");
+	for(int i=0; i < vec1.size(); i++)
+	{
+		tempString = vec1[i];
+		if(tempString != "")
+		{
+			endPos = tempString.find("jpg");
+			filePath = tempString.substr(0,endPos);
+			filePath += "jpg";
+
+			beginPos = filePath.find_last_of("\\");
+			fileName = filePath.substr(beginPos+1,endPos);
+
+			image = imread(filePath);
+			filePath = "cross_validation\\testset_1\\";
+			filePath += fileName;
+			imwrite(filePath, image);
+			cout<<fileName<<"\n";
+
+			infoFile<<fileName<<"\n";
+		}
+	}
+	infoFile.close();
+
+	return;
 }
