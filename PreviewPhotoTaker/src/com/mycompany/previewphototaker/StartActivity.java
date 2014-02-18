@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import android.widget.Toast;
 
 public class StartActivity extends Activity implements OnClickListener {
 
@@ -48,9 +47,8 @@ public class StartActivity extends Activity implements OnClickListener {
 			startActivity(intent_picturetaker);
 			break;
 		case R.id.createcsv_button:
-			InfoFileWriter csvFile = new InfoFileWriter();
-			csvFile.writeInfoFiles("info");
-			Toast.makeText(getApplicationContext(), "Info files updated", Toast.LENGTH_SHORT).show();
+			Intent i = new Intent(this, InfoFileWriterActivity.class);
+			startActivity(i);
 			break;	
 		case R.id.choose_button:
 			Intent intent_poa = new Intent(this, PhotographedObjectsActivity.class);

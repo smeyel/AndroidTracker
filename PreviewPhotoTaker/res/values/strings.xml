@@ -11,6 +11,7 @@
     <string name="choose_label"> Choose used objects</string>
     <string name="automated_button">Automated</string>
     <string name="stop_button">Stop</string>
+    <string name="title_activity_info_file_writer">InfoFileWriterActivity</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>
-

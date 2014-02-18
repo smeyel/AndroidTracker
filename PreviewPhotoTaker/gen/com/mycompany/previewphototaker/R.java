@@ -22,8 +22,8 @@ containing a value of this type.
 <colgroup align="left" />
 <tr><th>Constant</th><th>Value</th><th>Description</th></tr>
 <tr><td><code>any</code></td><td>-1</td><td></td></tr>
-<tr><td><code>back</code></td><td>0</td><td></td></tr>
-<tr><td><code>front</code></td><td>1</td><td></td></tr>
+<tr><td><code>back</code></td><td>99</td><td></td></tr>
+<tr><td><code>front</code></td><td>98</td><td></td></tr>
 </table>
          */
         public static final int camera_id=0x7f010001;
@@ -73,7 +73,8 @@ containing a value of this type.
         public static final int activity_start=0x7f030002;
     }
     public static final class menu {
-        public static final int main=0x7f090000;
+        public static final int info_file_writer=0x7f090000;
+        public static final int main=0x7f090001;
     }
     public static final class string {
         public static final int action_settings=0x7f070001;
@@ -81,11 +82,13 @@ containing a value of this type.
         public static final int automated_button=0x7f070008;
         public static final int choose_label=0x7f070007;
         public static final int createcsv_label=0x7f070005;
+        public static final int hello_world=0x7f07000b;
         public static final int main_title=0x7f070002;
         public static final int nameofobject_label=0x7f070006;
         public static final int start_label=0x7f070003;
         public static final int stop_button=0x7f070009;
         public static final int text_label=0x7f070004;
+        public static final int title_activity_info_file_writer=0x7f07000a;
     }
     public static final class style {
         /** 
@@ -149,8 +152,8 @@ containing a value of this type.
 <colgroup align="left" />
 <tr><th>Constant</th><th>Value</th><th>Description</th></tr>
 <tr><td><code>any</code></td><td>-1</td><td></td></tr>
-<tr><td><code>back</code></td><td>0</td><td></td></tr>
-<tr><td><code>front</code></td><td>1</td><td></td></tr>
+<tr><td><code>back</code></td><td>99</td><td></td></tr>
+<tr><td><code>front</code></td><td>98</td><td></td></tr>
 </table>
           @attr name com.mycompany.previewphototaker:camera_id
         */

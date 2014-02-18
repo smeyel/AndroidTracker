@@ -1,9 +1,10 @@
 package com.mycompany.previewphototaker;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -13,8 +14,9 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class PhotographedObjectsActivity extends Activity {
+public class InfoFileWriterActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -29,9 +31,6 @@ public class PhotographedObjectsActivity extends Activity {
 	    finish();
 	}
 	
-	/**
-	 * Creates dynamically radio buttons.
-	 */
 	private void createRadioButtonsAndChooseButton() {
 			    
 	    String root = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -81,18 +80,16 @@ public class PhotographedObjectsActivity extends Activity {
 					
 					int selectedId = rg.getCheckedRadioButtonId();
 					RadioButton selectedRadioButton = (RadioButton) findViewById(selectedId);
-					Intent intent_start = new Intent(PhotographedObjectsActivity.this, StartActivity.class);
-					Bundle b = new Bundle();
-					if(selectedId != -1) //there is a selected radio button
+					if(selectedId != -1)
 					{
-						b.putString("objectname", selectedRadioButton.getText().toString()); 
+						writeInfoFile(selectedRadioButton.getText().toString(), selectedRadioButton.getText().toString());
+						Toast.makeText(getApplicationContext(), "Info file updated", Toast.LENGTH_SHORT).show();
 					}
-					else //there isn't any selected radio button
+					else 
 					{
-						b.putString("objectname", ""); 
+						Toast.makeText(getApplicationContext(), "Please choose an object!", Toast.LENGTH_SHORT).show();
 					}
-					intent_start.putExtras(b);
-					startActivity(intent_start);
+					
 				}
 		    	
 		    });
@@ -105,4 +102,40 @@ public class PhotographedObjectsActivity extends Activity {
         	layout.addView(historyEmpty);
         }
 	}
+	
+	public void writeInfoFile(String choosenFolder,String filename) {
+		
+		try
+	    {
+			FileWriter writer = null;
+			String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+			String choosenDir = root + "/" + "PhotosForResearch/" + choosenFolder;
+	        
+	        File fileChoosenPath = new File(choosenDir);
+	        
+			String fileNameWithType = filename + ".txt";
+			File tempfile = new File(fileChoosenPath, fileNameWithType);
+			writer = new FileWriter(tempfile);
+
+			File[] listedFiles = fileChoosenPath.listFiles();
+			if (listedFiles != null) {
+				for (File f : listedFiles) {
+					if (f.isFile()) {
+						if (fileNameWithType.compareTo(f.getName()) != 0 && f.getName().contains(".jpg")) {
+							writer.append(f.getName());
+							writer.append("\r\n");
+						}
+					}
+				}
+			}
+			writer.flush();
+			writer.close();
+	    }
+	    catch(IOException e)
+	    {
+	         e.printStackTrace();
+	    }
+		
+	}
+
 }
