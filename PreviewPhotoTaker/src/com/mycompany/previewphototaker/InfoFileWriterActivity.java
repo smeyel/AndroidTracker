@@ -24,95 +24,91 @@ public class InfoFileWriterActivity extends Activity {
 		setContentView(R.layout.activity_photographedobjects);
 		createRadioButtonsAndChooseButton();
 	}
-	
+
 	@Override
 	protected void onPause() {
-	    super.onPause();  
-	    finish();
+		super.onPause();
+		finish();
 	}
-	
+
 	private void createRadioButtonsAndChooseButton() {
-			    
-	    String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+		String root = Environment.getExternalStorageDirectory()
+				.getAbsolutePath();
 		String dir = root + "/" + "PhotosForResearch";
 		File foldersandfilesDir = new File(dir);
-        String[] names = foldersandfilesDir.list();
-        int folderCounter=0;
-        if(foldersandfilesDir.isDirectory())
-        {
-	        for(String name : names)
-	        {
-	        	if(new File(dir + "/" + name).isDirectory())
-	        	{
-	        		folderCounter++;
-	        	}
-	        }
-        }
-	    
-        if(folderCounter != 0)
-        {
-	        ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
-		    final RadioButton[] rb = new RadioButton[folderCounter];
-		    final RadioGroup rg = new RadioGroup(this); //create the RadioGroup
-		    rg.setOrientation(RadioGroup.VERTICAL);		   
-		    folderCounter = 0;
-		    for(String name : names)
-	        {
-	        	if(new File(dir + "/" + name).isDirectory())
-	        	{
-	        		rb[folderCounter]  = new RadioButton(this);
-	 		        rg.addView(rb[folderCounter]); //the RadioButtons are added to the radioGroup instead of the layout
-	 		        rb[folderCounter].setText(name);
-	 		        folderCounter++;
-	        	}
-	        }
-		    layout.addView(rg);  
-		    
-		    Button chooseButton = new Button(this);
-		    chooseButton.setText("Choose");
-		    LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		    layout.addView(chooseButton, lp);
-		    
-		    chooseButton.setOnClickListener(new View.OnClickListener() {
+		String[] names = foldersandfilesDir.list();
+		int folderCounter = 0;
+		if (foldersandfilesDir.isDirectory()) {
+			for (String name : names) {
+				if (new File(dir + "/" + name).isDirectory()) {
+					folderCounter++;
+				}
+			}
+		}
+
+		if (folderCounter != 0) {
+			ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
+			final RadioButton[] rb = new RadioButton[folderCounter];
+			final RadioGroup rg = new RadioGroup(this);
+			rg.setOrientation(RadioGroup.VERTICAL);
+			folderCounter = 0;
+			for (String name : names) {
+				if (new File(dir + "/" + name).isDirectory()) {
+					rb[folderCounter] = new RadioButton(this);
+					rg.addView(rb[folderCounter]);
+					rb[folderCounter].setText(name);
+					folderCounter++;
+				}
+			}
+			layout.addView(rg);
+
+			Button chooseButton = new Button(this);
+			chooseButton.setText("Choose");
+			LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT,
+					LayoutParams.WRAP_CONTENT);
+			layout.addView(chooseButton, lp);
+
+			chooseButton.setOnClickListener(new View.OnClickListener() {
 
 				@Override
 				public void onClick(View v) {
-					
+
 					int selectedId = rg.getCheckedRadioButtonId();
 					RadioButton selectedRadioButton = (RadioButton) findViewById(selectedId);
-					if(selectedId != -1)
-					{
-						writeInfoFile(selectedRadioButton.getText().toString(), selectedRadioButton.getText().toString());
-						Toast.makeText(getApplicationContext(), "Info file updated", Toast.LENGTH_SHORT).show();
+					if (selectedId != -1) {
+						writeInfoFile(selectedRadioButton.getText().toString(),
+								selectedRadioButton.getText().toString());
+						Toast.makeText(getApplicationContext(),
+								"Info file updated", Toast.LENGTH_SHORT).show();
+					} else {
+						Toast.makeText(getApplicationContext(),
+								"Please choose an object!", Toast.LENGTH_SHORT)
+								.show();
 					}
-					else 
-					{
-						Toast.makeText(getApplicationContext(), "Please choose an object!", Toast.LENGTH_SHORT).show();
-					}
-					
+
 				}
-		    	
-		    });
-        }
-        else
-        {
-        	TextView historyEmpty = new TextView(this);
-        	historyEmpty.setText("There are no photos in the history");
-        	ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
-        	layout.addView(historyEmpty);
-        }
+
+			});
+		} else {
+			TextView historyEmpty = new TextView(this);
+			historyEmpty.setText("There are no photos in the history");
+			ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
+			layout.addView(historyEmpty);
+		}
 	}
-	
-	public void writeInfoFile(String choosenFolder,String filename) {
-		
-		try
-	    {
+
+	public void writeInfoFile(String choosenFolder, String filename) {
+
+		try {
 			FileWriter writer = null;
-			String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-			String choosenDir = root + "/" + "PhotosForResearch/" + choosenFolder;
-	        
-	        File fileChoosenPath = new File(choosenDir);
-	        
+			String root = Environment.getExternalStorageDirectory()
+					.getAbsolutePath();
+			String choosenDir = root + "/" + "PhotosForResearch/"
+					+ choosenFolder;
+
+			File fileChoosenPath = new File(choosenDir);
+
 			String fileNameWithType = filename + ".txt";
 			File tempfile = new File(fileChoosenPath, fileNameWithType);
 			writer = new FileWriter(tempfile);
@@ -121,7 +117,8 @@ public class InfoFileWriterActivity extends Activity {
 			if (listedFiles != null) {
 				for (File f : listedFiles) {
 					if (f.isFile()) {
-						if (fileNameWithType.compareTo(f.getName()) != 0 && f.getName().contains(".jpg")) {
+						if (fileNameWithType.compareTo(f.getName()) != 0
+								&& f.getName().contains(".jpg")) {
 							writer.append(f.getName());
 							writer.append("\r\n");
 						}
@@ -130,12 +127,10 @@ public class InfoFileWriterActivity extends Activity {
 			}
 			writer.flush();
 			writer.close();
-	    }
-	    catch(IOException e)
-	    {
-	         e.printStackTrace();
-	    }
-		
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }

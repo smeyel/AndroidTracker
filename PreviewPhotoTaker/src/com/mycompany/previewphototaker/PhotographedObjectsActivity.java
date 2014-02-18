@@ -22,87 +22,83 @@ public class PhotographedObjectsActivity extends Activity {
 		setContentView(R.layout.activity_photographedobjects);
 		createRadioButtonsAndChooseButton();
 	}
-	
+
 	@Override
 	protected void onPause() {
-	    super.onPause();  
-	    finish();
+		super.onPause();
+		finish();
 	}
-	
+
 	/**
 	 * Creates dynamically radio buttons.
 	 */
 	private void createRadioButtonsAndChooseButton() {
-			    
-	    String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+		String root = Environment.getExternalStorageDirectory()
+				.getAbsolutePath();
 		String dir = root + "/" + "PhotosForResearch";
 		File foldersandfilesDir = new File(dir);
-        String[] names = foldersandfilesDir.list();
-        int folderCounter=0;
-        if(foldersandfilesDir.isDirectory())
-        {
-	        for(String name : names)
-	        {
-	        	if(new File(dir + "/" + name).isDirectory())
-	        	{
-	        		folderCounter++;
-	        	}
-	        }
-        }
-	    
-        if(folderCounter != 0)
-        {
-	        ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
-		    final RadioButton[] rb = new RadioButton[folderCounter];
-		    final RadioGroup rg = new RadioGroup(this); //create the RadioGroup
-		    rg.setOrientation(RadioGroup.VERTICAL);		   
-		    folderCounter = 0;
-		    for(String name : names)
-	        {
-	        	if(new File(dir + "/" + name).isDirectory())
-	        	{
-	        		rb[folderCounter]  = new RadioButton(this);
-	 		        rg.addView(rb[folderCounter]); //the RadioButtons are added to the radioGroup instead of the layout
-	 		        rb[folderCounter].setText(name);
-	 		        folderCounter++;
-	        	}
-	        }
-		    layout.addView(rg);  
-		    
-		    Button chooseButton = new Button(this);
-		    chooseButton.setText("Choose");
-		    LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-		    layout.addView(chooseButton, lp);
-		    
-		    chooseButton.setOnClickListener(new View.OnClickListener() {
+		String[] names = foldersandfilesDir.list();
+		int folderCounter = 0;
+		if (foldersandfilesDir.isDirectory()) {
+			for (String name : names) {
+				if (new File(dir + "/" + name).isDirectory()) {
+					folderCounter++;
+				}
+			}
+		}
+
+		if (folderCounter != 0) {
+			ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
+			final RadioButton[] rb = new RadioButton[folderCounter];
+			final RadioGroup rg = new RadioGroup(this); 
+			rg.setOrientation(RadioGroup.VERTICAL);
+			folderCounter = 0;
+			for (String name : names) {
+				if (new File(dir + "/" + name).isDirectory()) {
+					rb[folderCounter] = new RadioButton(this);
+					rg.addView(rb[folderCounter]); 
+					rb[folderCounter].setText(name);
+					folderCounter++;
+				}
+			}
+			layout.addView(rg);
+
+			Button chooseButton = new Button(this);
+			chooseButton.setText("Choose");
+			LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT,
+					LayoutParams.WRAP_CONTENT);
+			layout.addView(chooseButton, lp);
+
+			chooseButton.setOnClickListener(new View.OnClickListener() {
 
 				@Override
 				public void onClick(View v) {
-					
+
 					int selectedId = rg.getCheckedRadioButtonId();
 					RadioButton selectedRadioButton = (RadioButton) findViewById(selectedId);
-					Intent intent_start = new Intent(PhotographedObjectsActivity.this, StartActivity.class);
+					Intent intent_start = new Intent(
+							PhotographedObjectsActivity.this,
+							StartActivity.class);
 					Bundle b = new Bundle();
-					if(selectedId != -1) //there is a selected radio button
+					if (selectedId != -1)
 					{
-						b.putString("objectname", selectedRadioButton.getText().toString()); 
-					}
-					else //there isn't any selected radio button
+						b.putString("objectname", selectedRadioButton.getText()
+								.toString());
+					} else 
 					{
-						b.putString("objectname", ""); 
+						b.putString("objectname", "");
 					}
 					intent_start.putExtras(b);
 					startActivity(intent_start);
 				}
-		    	
-		    });
-        }
-        else
-        {
-        	TextView historyEmpty = new TextView(this);
-        	historyEmpty.setText("There are no photos in the history");
-        	ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
-        	layout.addView(historyEmpty);
-        }
+
+			});
+		} else {
+			TextView historyEmpty = new TextView(this);
+			historyEmpty.setText("There are no photos in the history");
+			ViewGroup layout = (ViewGroup) findViewById(R.id.layoutid);
+			layout.addView(historyEmpty);
+		}
 	}
 }
